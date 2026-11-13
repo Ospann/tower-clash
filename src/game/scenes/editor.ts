@@ -11,6 +11,7 @@ import {
   type Rect,
 } from '../levels/level-types';
 import { validateLevel } from '../levels/validate-level';
+import { fitUiCamera } from '../ui/screen';
 import { FlowField } from '../sim/flow-field';
 import { GridMap, obstacleContains, rectContains } from '../sim/grid-map';
 
@@ -67,6 +68,7 @@ export class EditorScene extends Phaser.Scene {
   }
 
   create(): void {
+    fitUiCamera(this);
     this.background = this.add
       .image(0, 0, generateLevelMap(this.textures, this.draft))
       .setOrigin(0);

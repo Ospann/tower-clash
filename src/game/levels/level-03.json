@@ -3,8 +3,8 @@
   "name": "level.03",
   "chapter": 1,
   "grid": {
-    "cols": 36,
-    "rows": 64,
+    "cols": 72,
+    "rows": 90,
     "cell": 20
   },
   "tiles": "meadow",
@@ -15,17 +15,57 @@
         "kind": "rect",
         "x": 0,
         "y": 0,
-        "w": 200,
-        "h": 160
+        "w": 600,
+        "h": 320
       }
     },
     {
       "type": "cliff",
       "shape": {
         "kind": "rect",
-        "x": 480,
+        "x": 880,
         "y": 0,
-        "w": 240,
+        "w": 560,
+        "h": 320
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 0,
+        "y": 320,
+        "w": 200,
+        "h": 400
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 1280,
+        "y": 320,
+        "w": 160,
+        "h": 440
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 440,
+        "y": 560,
+        "w": 560,
+        "h": 240
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 1240,
+        "y": 560,
+        "w": 40,
         "h": 160
       }
     },
@@ -34,29 +74,159 @@
       "shape": {
         "kind": "rect",
         "x": 0,
-        "y": 160,
-        "w": 80,
-        "h": 1120
+        "y": 720,
+        "w": 160,
+        "h": 40
       }
     },
     {
       "type": "cliff",
       "shape": {
         "kind": "rect",
-        "x": 600,
-        "y": 160,
+        "x": 0,
+        "y": 760,
         "w": 120,
-        "h": 1120
+        "h": 80
       }
     },
     {
       "type": "cliff",
       "shape": {
         "kind": "rect",
-        "x": 200,
-        "y": 240,
-        "w": 280,
-        "h": 560
+        "x": 1320,
+        "y": 760,
+        "w": 120,
+        "h": 80
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 440,
+        "y": 800,
+        "w": 200,
+        "h": 480
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 840,
+        "y": 800,
+        "w": 160,
+        "h": 480
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 0,
+        "y": 840,
+        "w": 80,
+        "h": 40
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 1360,
+        "y": 840,
+        "w": 80,
+        "h": 40
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 0,
+        "y": 880,
+        "w": 40,
+        "h": 920
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 1400,
+        "y": 880,
+        "w": 40,
+        "h": 920
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 400,
+        "y": 960,
+        "w": 40,
+        "h": 200
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 1000,
+        "y": 960,
+        "w": 40,
+        "h": 200
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 360,
+        "y": 1000,
+        "w": 40,
+        "h": 120
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 640,
+        "y": 1000,
+        "w": 200,
+        "h": 280
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 1040,
+        "y": 1000,
+        "w": 40,
+        "h": 120
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 40,
+        "y": 1200,
+        "w": 40,
+        "h": 600
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 1360,
+        "y": 1200,
+        "w": 40,
+        "h": 600
       }
     },
     {
@@ -64,18 +234,48 @@
       "shape": {
         "kind": "rect",
         "x": 80,
-        "y": 880,
-        "w": 120,
-        "h": 400
+        "y": 1240,
+        "w": 40,
+        "h": 560
       }
     },
     {
       "type": "cliff",
       "shape": {
         "kind": "rect",
-        "x": 480,
-        "y": 880,
-        "w": 120,
+        "x": 1320,
+        "y": 1240,
+        "w": 40,
+        "h": 560
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 120,
+        "y": 1320,
+        "w": 40,
+        "h": 480
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 1280,
+        "y": 1320,
+        "w": 40,
+        "h": 480
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 160,
+        "y": 1400,
+        "w": 40,
         "h": 400
       }
     },
@@ -84,30 +284,50 @@
       "shape": {
         "kind": "rect",
         "x": 200,
-        "y": 1120,
-        "w": 280,
-        "h": 160
+        "y": 1480,
+        "w": 400,
+        "h": 320
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 880,
+        "y": 1480,
+        "w": 400,
+        "h": 320
+      }
+    },
+    {
+      "type": "rock",
+      "shape": {
+        "kind": "rect",
+        "x": 640,
+        "y": 800,
+        "w": 200,
+        "h": 200
       }
     }
   ],
   "entries": [
     {
       "id": "a",
-      "x": 340.0,
+      "x": 740.0,
       "y": 0,
       "radius": 130.0
     }
   ],
   "zones": [
     {
-      "x": 200,
-      "y": 1040,
+      "x": 600,
+      "y": 1640,
       "w": 280,
-      "h": 80
+      "h": 120
     }
   ],
   "baseHp": 30,
-  "turretLimit": 4,
+  "turretLimit": 5,
   "win": {
     "type": "waves"
   },
@@ -121,7 +341,7 @@
         {
           "goblin": "grunt",
           "count": 60,
-          "duration": 10,
+          "duration": 12,
           "entry": "a",
           "delay": 0
         }
@@ -132,7 +352,7 @@
         {
           "goblin": "grunt",
           "count": 90,
-          "duration": 12,
+          "duration": 14,
           "entry": "a",
           "delay": 0
         },
@@ -149,14 +369,14 @@
       "groups": [
         {
           "goblin": "grunt",
-          "count": 130,
-          "duration": 14,
+          "count": 126,
+          "duration": 15,
           "entry": "a",
           "delay": 0
         },
         {
           "goblin": "shield",
-          "count": 16,
+          "count": 17,
           "duration": 10,
           "entry": "a",
           "delay": 3
@@ -174,14 +394,14 @@
       "groups": [
         {
           "goblin": "grunt",
-          "count": 180,
-          "duration": 15,
+          "count": 168,
+          "duration": 16,
           "entry": "a",
           "delay": 0
         },
         {
           "goblin": "shield",
-          "count": 26,
+          "count": 27,
           "duration": 12,
           "entry": "a",
           "delay": 3

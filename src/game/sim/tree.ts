@@ -71,6 +71,7 @@ export function loadoutFrom(levels: TreeLevels): Loadout {
     } else if (effect.type === 'limit') loadout.turretLimitBonus += Math.round(bonus);
     else if (effect.type === 'baseHp') loadout.baseHp += bonus;
     else if (effect.type === 'reward') loadout.reward += bonus;
+    else if (effect.type === 'rocket') loadout.rocket[effect.stat] += bonus;
   }
   return loadout;
 }

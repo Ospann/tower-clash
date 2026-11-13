@@ -24,6 +24,7 @@ export interface Loadout {
   turretLimitBonus: number;
   baseHp: number;
   reward: number;
+  rocket: { damage: number; rate: number; radius: number };
 }
 
 function turret(unlocked: boolean): TurretMods {
@@ -52,6 +53,7 @@ export function neutralLoadout(unlockAll = true): Loadout {
     turretLimitBonus: 0,
     baseHp: 1,
     reward: 1,
+    rocket: { damage: 1, rate: 1, radius: 1 },
   };
 }
 

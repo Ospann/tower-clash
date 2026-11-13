@@ -1,10 +1,11 @@
 import Phaser from 'phaser';
-import { ATLAS_KEY, Frame, palette } from '../art';
+import { Frame, palette, uiImage, UI_RATIO } from '../art';
 import { economy } from '../balance';
 import { SceneKey } from '../keys';
 import { services } from '../services';
+import { addBackdrop } from '../ui/backdrop';
 import { Button } from '../ui/button';
-import { restartOnResize } from '../ui/screen';
+import { currentScreen, fitUiCamera, restartOnResize } from '../ui/screen';
 import { addLabel } from '../ui/text';
 import type { GameSceneData, ResultData } from './game';
 
@@ -25,7 +26,9 @@ export class ResultScene extends Phaser.Scene {
 
   create(): void {
     const { i18n, ads, save } = services();
-    const { width, height } = this.scale;
+    fitUiCamera(this);
+    const { width, height } = currentScreen();
+    addBackdrop(this, 0.72);
     const cx = width / 2;
     const result = this.result;
     this.cameras.main.fadeIn(220);
@@ -43,17 +46,16 @@ export class ResultScene extends Phaser.Scene {
 
     if (result.won) {
       for (let s = 0; s < 3; s += 1) {
-        const star = this.add
-          .image(
-            cx + (s - 1) * 120,
-            height * 0.24,
-            ATLAS_KEY,
-            s < result.stars ? Frame.Star : Frame.StarEmpty,
-          )
-          .setScale(0);
+        const star = uiImage(
+          this,
+          cx + (s - 1) * 120,
+          height * 0.24,
+          s < result.stars ? Frame.Star : Frame.StarEmpty,
+          0,
+        );
         this.tweens.add({
           targets: star,
-          scale: s === 1 ? 2 : 1.7,
+          scale: (s === 1 ? 2 : 1.7) / UI_RATIO,
           duration: 320,
           delay: 150 + s * 180,
           ease: 'Back.easeOut',
@@ -87,7 +89,7 @@ export class ResultScene extends Phaser.Scene {
       palette.uiMuted,
     );
 
-    this.add.image(cx - 190, height * 0.45, ATLAS_KEY, Frame.Crystal).setScale(1.3);
+    uiImage(this, cx - 190, height * 0.45, Frame.Crystal, 1.3);
     const reward = addLabel(this, cx + 20, height * 0.45, '', 42, palette.crystal);
     const renderReward = (): void => {
       const total = result.reward * (this.doubled ? economy.rewardedMultiplier : 1);

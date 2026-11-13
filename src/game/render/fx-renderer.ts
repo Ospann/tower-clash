@@ -11,6 +11,7 @@ const MAX_RINGS = 24;
 const MAX_LINES = 60;
 const MAX_DEATH_BURSTS_PER_FRAME = 24;
 const GRAVITY = 260;
+const DECAL_SCALE = 2;
 
 interface Ring {
   image: Phaser.GameObjects.Image;
@@ -72,7 +73,11 @@ export class FxRenderer {
     this.sparkFrame = scene.textures.get(ATLAS_KEY).get(Frame.Spark);
     this.skinTints = GOBLIN_KINDS.map((kind) => hexToInt(goblinColors[kind].skinDark));
     this.splatScale = GOBLIN_KINDS.map((kind) => goblins[kind].radius / 7);
-    this.decals = scene.add.renderTexture(0, 0, width, height).setOrigin(0).setDepth(depths.decals);
+    this.decals = scene.add
+      .renderTexture(0, 0, Math.ceil(width / DECAL_SCALE), Math.ceil(height / DECAL_SCALE))
+      .setOrigin(0)
+      .setScale(DECAL_SCALE)
+      .setDepth(depths.decals);
     this.particleBlitter = scene.add.blitter(0, 0, ATLAS_KEY).setDepth(depths.air);
     this.lineGraphics = scene.add.graphics().setDepth(depths.air);
     for (let i = 0; i < MAX_RINGS; i += 1) {
@@ -86,7 +91,7 @@ export class FxRenderer {
       });
     }
     this.flash = scene.add
-      .rectangle(0, 0, width, height, 0xffffff, 1)
+      .rectangle(-width, -height, width * 3, height * 3, 0xffffff, 1)
       .setOrigin(0)
       .setDepth(depths.air + 1)
       .setVisible(false);
@@ -110,11 +115,11 @@ export class FxRenderer {
       if (kind === FxKind.Death) {
         if (stamped < simConfig.decalsPerFrame) {
           stamped += 1;
-          this.decals.stamp(ATLAS_KEY, splatFrame((x + y) | 0), x, y, {
+          this.decals.stamp(ATLAS_KEY, splatFrame((x + y) | 0), x / DECAL_SCALE, y / DECAL_SCALE, {
             tint: this.skinTints[a] ?? 0x6f9628,
             alpha: 0.75,
             angle: ((x * 7 + y * 13) | 0) % 360,
-            scale: (this.splatScale[a] ?? 1) * 1.1,
+            scale: ((this.splatScale[a] ?? 1) * 1.1) / DECAL_SCALE,
           });
         }
         if (bursts < MAX_DEATH_BURSTS_PER_FRAME) {

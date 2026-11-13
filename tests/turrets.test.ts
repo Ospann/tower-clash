@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { abilities, goblins, turretRules, turrets } from '../src/game/balance';
+import { abilities, goblins, rocket, turretRules, turrets } from '../src/game/balance';
 import type { LevelData, Obstacle } from '../src/game/levels/level-types';
 import { applyDamage, applySlow, computeDamage } from '../src/game/sim/damage';
 import { neutralLoadout } from '../src/game/sim/loadout';
@@ -313,5 +313,46 @@ describe('run flow', () => {
     expect(world.useBigBang()).toBe(false);
     world.grantBigBang();
     expect(world.abilityReady('bigBang')).toBe(true);
+  });
+});
+
+describe('player rocket', () => {
+  it('flies from the base to the tap and blows up the crowd there', () => {
+    const world = battle();
+    world.startBattle();
+    const near = world.spawnGoblin('brute', 360, 400);
+    const far = world.spawnGoblin('brute', 600, 900);
+    const flyer = world.spawnGoblin('glider', 380, 410);
+    for (const i of [near, far, flyer]) world.horde.speed[i] = 0;
+    expect(world.fireRocket(360, 400)).toBe(true);
+    expect(world.projectiles.count).toBe(1);
+    expect(world.projectiles.items[0]?.sy).toBeGreaterThan(1000);
+    run(world, 1.5);
+    expect(world.horde.hp[near]).toBeLessThan(goblins.brute.hp);
+    expect(world.horde.hp[far]).toBe(goblins.brute.hp);
+    expect(world.horde.hp[flyer]).toBeLessThan(goblins.glider.hp);
+  });
+
+  it('reloads between shots and only works in battle', () => {
+    const world = battle();
+    expect(world.fireRocket(360, 400)).toBe(false);
+    world.startBattle();
+    expect(world.fireRocket(360, 400)).toBe(true);
+    expect(world.fireRocket(360, 400)).toBe(false);
+    run(world, rocket.cooldown + 0.05);
+    expect(world.fireRocket(360, 400)).toBe(true);
+    expect(world.rocketsFired).toBe(2);
+  });
+
+  it('scales with the upgrade tree', () => {
+    const loadout = neutralLoadout();
+    loadout.rocket = { damage: 2, rate: 2, radius: 1.5 };
+    const world = new World({ level: level(), loadout, manualSpawns: true });
+    world.startBattle();
+    world.fireRocket(360, 400);
+    const shot = world.projectiles.items[0];
+    expect(shot?.damage).toBe(rocket.damage * 2);
+    expect(shot?.splash).toBe(rocket.radius * 1.5);
+    expect(world.rocketCooldown).toBeCloseTo(rocket.cooldown / 2);
   });
 });

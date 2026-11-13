@@ -8,6 +8,7 @@ export const ProjectileKind = {
   Shell: 1,
   Flask: 2,
   Bomb: 3,
+  Rocket: 4,
 } as const;
 
 export interface Projectile {
@@ -135,7 +136,8 @@ function land(world: World, p: Projectile): void {
     return;
   }
   const bomb = p.kind === ProjectileKind.Bomb;
-  damageArea(world, p.tx, p.ty, p.splash, p.damage, p.damageType, bomb);
+  const airburst = bomb || p.kind === ProjectileKind.Rocket;
+  damageArea(world, p.tx, p.ty, p.splash, p.damage, p.damageType, airburst);
   world.events.push(FxKind.Blast, p.tx, p.ty, p.splash, bomb ? 2 : 0);
 }
 

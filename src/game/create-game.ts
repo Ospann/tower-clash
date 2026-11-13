@@ -17,8 +17,8 @@ export function createGame(parent: HTMLElement): Phaser.Game {
   return new Phaser.Game({
     type: Phaser.AUTO,
     parent,
-    width: screen.width,
-    height: screen.height,
+    width: screen.width * screen.scale,
+    height: screen.height * screen.scale,
     backgroundColor: gameConfig.backgroundColor,
     disableContextMenu: true,
     scale: {

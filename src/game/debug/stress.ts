@@ -12,55 +12,55 @@ const MIX: readonly (readonly [GoblinKind, number])[] = [
 ];
 
 const UP = -Math.PI / 2;
+const SIZE = 2400;
+
+const kinds: readonly TurretKind[] = ['ballista', 'mortar', 'gatling', 'tar', 'tesla', 'beam'];
 
 export const stressTurrets: readonly { kind: TurretKind; x: number; y: number; angle: number }[] = [
-  { kind: 'ballista', x: 360, y: 980, angle: UP },
-  { kind: 'mortar', x: 120, y: 960, angle: UP },
-  { kind: 'gatling', x: 250, y: 820, angle: UP },
-  { kind: 'tar', x: 600, y: 960, angle: UP },
-  { kind: 'tesla', x: 200, y: 640, angle: UP },
-  { kind: 'beam', x: 470, y: 820, angle: UP },
-  { kind: 'gatling', x: 520, y: 640, angle: UP },
-  { kind: 'tesla', x: 360, y: 760, angle: UP },
-  { kind: 'mortar', x: 360, y: 640, angle: UP },
-  { kind: 'ballista', x: 60, y: 620, angle: -0.6 },
-  { kind: 'beam', x: 660, y: 620, angle: -2.5 },
-  { kind: 'tar', x: 360, y: 300, angle: UP },
+  ...[300, 700, 1100, 1500, 1900].flatMap((x, index) => [
+    { kind: kinds[index % kinds.length] ?? 'ballista', x, y: 1980, angle: UP },
+    { kind: kinds[(index + 2) % kinds.length] ?? 'mortar', x: x + 200, y: 1700, angle: UP },
+  ]),
+  { kind: 'tesla', x: 1200, y: 1300, angle: UP },
+  { kind: 'beam', x: 600, y: 1200, angle: UP },
+  { kind: 'gatling', x: 1800, y: 1200, angle: UP },
+  { kind: 'mortar', x: 1200, y: 900, angle: UP },
 ];
+
+function cliff(x: number, y: number, w: number, h: number): LevelData['obstacles'][number] {
+  return { type: 'cliff', shape: { kind: 'rect', x, y, w, h } };
+}
 
 export function stressLevel(): LevelData {
   return {
     id: 'stress',
     name: 'level.stress',
     chapter: 0,
-    grid: { cols: 36, rows: 64, cell: 20 },
+    grid: { cols: SIZE / 20, rows: SIZE / 20, cell: 20 },
     tiles: 'meadow',
     obstacles: [
-      { type: 'water', shape: { kind: 'rect', x: 240, y: 420, w: 240, h: 160 } },
-      { type: 'rock', shape: { kind: 'rect', x: 0, y: 700, w: 200, h: 80 } },
-      { type: 'rock', shape: { kind: 'rect', x: 520, y: 700, w: 200, h: 80 } },
-      {
-        type: 'forest',
-        shape: {
-          kind: 'poly',
-          points: [
-            { x: 60, y: 240 },
-            { x: 200, y: 220 },
-            { x: 220, y: 330 },
-            { x: 90, y: 360 },
-          ],
-        },
-      },
-      { type: 'ruins', shape: { kind: 'rect', x: 500, y: 260, w: 120, h: 100 } },
-      { type: 'ruins', shape: { kind: 'rect', x: 300, y: 860, w: 120, h: 60 } },
+      cliff(0, 0, 240, SIZE),
+      cliff(SIZE - 240, 0, 240, SIZE),
+      cliff(240, 600, 700, 160),
+      cliff(1460, 600, 700, 160),
+      cliff(800, 1100, 800, 160),
+      cliff(240, 1500, 600, 120),
+      cliff(1560, 1500, 600, 120),
+      { type: 'water', shape: { kind: 'circle', x: 1200, y: 400, r: 180 } },
+      { type: 'forest', shape: { kind: 'rect', x: 520, y: 900, w: 200, h: 140 } },
+      { type: 'ruins', shape: { kind: 'rect', x: 1680, y: 900, w: 200, h: 140 } },
+      ...[0, 1, 2, 3, 4, 5].map((n) => ({
+        type: 'rock' as const,
+        shape: { kind: 'circle' as const, x: 500 + n * 280, y: 1820, r: 18 },
+      })),
     ],
     entries: [
-      { id: 'a', x: 180, y: 0, radius: 70 },
-      { id: 'b', x: 540, y: 0, radius: 70 },
+      { id: 'a', x: 600, y: 0, radius: 300 },
+      { id: 'b', x: 1800, y: 0, radius: 300 },
     ],
-    zones: [{ x: 0, y: 1040, w: 720, h: 90 }],
+    zones: [{ x: 240, y: 2160, w: SIZE - 480, h: 120 }],
     baseHp: 1000,
-    turretLimit: 12,
+    turretLimit: 20,
     win: { type: 'waves' },
     difficulty: { hp: 1, speed: 1 },
     waves: [{ groups: [{ goblin: 'grunt', count: 1, duration: 1, entry: 'a', delay: 0 }] }],

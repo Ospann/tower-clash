@@ -4,6 +4,7 @@ import { generateSfx } from '../audio/sfx';
 import { debugFlags } from '../debug/flags';
 import { SceneKey } from '../keys';
 import { services } from '../services';
+import { currentScreen, fitUiCamera } from '../ui/screen';
 import { addLabel } from '../ui/text';
 
 export class PreloadScene extends Phaser.Scene {
@@ -13,7 +14,8 @@ export class PreloadScene extends Phaser.Scene {
 
   preload(): void {
     const { i18n } = services();
-    const { width, height } = this.scale;
+    fitUiCamera(this);
+    const { width, height } = currentScreen();
     const barWidth = width * 0.7;
     const barHeight = 28;
     const x = (width - barWidth) / 2;

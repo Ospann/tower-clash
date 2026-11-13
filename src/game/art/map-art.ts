@@ -1,6 +1,5 @@
 import type { LevelData, Obstacle, Rect } from '../levels/level-types';
 import { mapHeight, mapWidth } from '../levels/level-types';
-import { layout } from '../config';
 import { createRng, type Rng } from '../sim/rng';
 import { entryOutward } from '../sim/world';
 import { obstacleColors, palette, themeColors, type ThemeColors } from './palette';
@@ -151,6 +150,54 @@ function tinted(mask: HTMLCanvasElement, color: string): HTMLCanvasElement {
   return canvas;
 }
 
+function drawWater(
+  ctx: CanvasRenderingContext2D,
+  pools: readonly Obstacle[],
+  rng: Rng,
+  width: number,
+  height: number,
+): void {
+  if (pools.length === 0) return;
+  const colors = obstacleColors.water;
+  const [mask, maskCtx] = makeCanvas(width, height);
+  maskCtx.fillStyle = '#ffffff';
+  for (const pool of pools) {
+    trace(maskCtx, { ...pool, type: 'cliff' });
+    maskCtx.fill();
+  }
+  const shore = tinted(mask, 'rgba(255, 255, 255, 0.45)');
+  for (let dx = -1; dx <= 1; dx += 1) {
+    for (let dy = -1; dy <= 1; dy += 1) {
+      if (dx !== 0 || dy !== 0) ctx.drawImage(shore, dx * 5, dy * 5);
+    }
+  }
+  const rim = tinted(mask, colors.dark);
+  for (let dx = -1; dx <= 1; dx += 1) {
+    for (let dy = -1; dy <= 1; dy += 1) {
+      if (dx !== 0 || dy !== 0) ctx.drawImage(rim, dx * 2, dy * 2);
+    }
+  }
+  const [surface, surfaceCtx] = makeCanvas(width, height);
+  surfaceCtx.fillStyle = colors.fill;
+  surfaceCtx.fillRect(0, 0, width, height);
+  surfaceCtx.strokeStyle = colors.light;
+  surfaceCtx.lineWidth = 2;
+  for (let y = 10; y < height; y += 38) {
+    for (let x = (y / 38) % 2 === 0 ? 10 : 29; x < width; x += 38) {
+      const wx = x + (rng() - 0.5) * 18;
+      const wy = y + (rng() - 0.5) * 18;
+      surfaceCtx.beginPath();
+      surfaceCtx.moveTo(wx - 9, wy);
+      surfaceCtx.quadraticCurveTo(wx - 4, wy - 4, wx, wy);
+      surfaceCtx.quadraticCurveTo(wx + 4, wy + 4, wx + 9, wy);
+      surfaceCtx.stroke();
+    }
+  }
+  surfaceCtx.globalCompositeOperation = 'destination-in';
+  surfaceCtx.drawImage(mask, 0, 0);
+  ctx.drawImage(surface, 0, 0);
+}
+
 function drawCliffs(
   ctx: CanvasRenderingContext2D,
   cliffs: readonly Obstacle[],
@@ -292,6 +339,13 @@ export function drawLevelBackground(ctx: CanvasRenderingContext2D, level: LevelD
   }
   ctx.globalAlpha = 1;
 
+  drawWater(
+    ctx,
+    level.obstacles.filter((obstacle) => obstacle.type === 'water'),
+    rng,
+    width,
+    height,
+  );
   drawCliffs(
     ctx,
     level.obstacles.filter((obstacle) => obstacle.type === 'cliff'),
@@ -305,9 +359,8 @@ export function drawLevelBackground(ctx: CanvasRenderingContext2D, level: LevelD
   for (const entry of level.entries) {
     const out = entryOutward(entry, width, height);
     const inward = Math.atan2(-out.y, -out.x);
-    const hud = out.y < 0 ? layout.hudHeight : 0;
     ctx.save();
-    ctx.translate(entry.x - out.x * (hud + 34), entry.y - out.y * (hud + 34));
+    ctx.translate(entry.x - out.x * 34, entry.y - out.y * 34);
     ctx.rotate(inward);
     for (let chevron = 0; chevron < 3; chevron += 1) {
       ctx.globalAlpha = 0.75 - chevron * 0.2;
@@ -327,7 +380,7 @@ export function drawLevelBackground(ctx: CanvasRenderingContext2D, level: LevelD
 
   const order = { cliff: -1, water: 0, ruins: 1, rock: 2, forest: 3 } as const;
   const sorted = level.obstacles
-    .filter((obstacle) => obstacle.type !== 'cliff')
+    .filter((obstacle) => obstacle.type !== 'cliff' && obstacle.type !== 'water')
     .toSorted((a, b) => order[a.type] - order[b.type]);
   for (const obstacle of sorted) drawObstacle(ctx, obstacle, rng);
 }

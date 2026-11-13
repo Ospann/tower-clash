@@ -95,9 +95,9 @@ describe('circle obstacles', () => {
 describe('level checks', () => {
   it('require room for turrets', () => {
     const sealed = level([
-      { type: 'rock', shape: { kind: 'rect', x: 0, y: 0, w: 300, h: 1040 } },
-      { type: 'rock', shape: { kind: 'rect', x: 420, y: 0, w: 300, h: 1040 } },
-      { type: 'water', shape: { kind: 'rect', x: 300, y: 0, w: 120, h: 1040 } },
+      { type: 'rock', shape: { kind: 'rect', x: 0, y: 0, w: 300, h: 1280 } },
+      { type: 'rock', shape: { kind: 'rect', x: 420, y: 0, w: 300, h: 1280 } },
+      { type: 'water', shape: { kind: 'rect', x: 300, y: 0, w: 120, h: 1280 } },
     ]);
     const issues = validateLevel(sealed);
     expect(issues.some((issue) => issue.includes('buildable cells'))).toBe(true);

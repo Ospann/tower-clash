@@ -11,8 +11,15 @@ import {
 import { GOBLIN_KINDS, goblins, type GoblinKind } from '../balance';
 import { SceneKey } from '../keys';
 import { services } from '../services';
+import { addBackdrop } from '../ui/backdrop';
 import { Button } from '../ui/button';
-import { isLandscape, restartOnResize } from '../ui/screen';
+import {
+  currentScreen,
+  fitUiCamera,
+  isLandscape,
+  renderScale,
+  restartOnResize,
+} from '../ui/screen';
 import { addLabel } from '../ui/text';
 
 const HEADER = 96;
@@ -35,7 +42,10 @@ export class BestiaryScene extends Phaser.Scene {
 
   create(): void {
     const { i18n, gameplay } = services();
-    const { width, height } = this.scale;
+    const camera = fitUiCamera(this);
+    const { width, height } = currentScreen();
+    addBackdrop(this, 0.72);
+    const scale = renderScale();
     gameplay.stop();
     this.cameras.main.fadeIn(200);
 
@@ -131,8 +141,10 @@ export class BestiaryScene extends Phaser.Scene {
       CARD.gap +
       FOOTER +
       14;
-    const camera = this.cameras.main;
-    camera.setBounds(0, 0, width, Math.max(height, contentBottom));
+    const maxScroll = Math.max(0, contentBottom - height);
+    const scrollTo = (y: number): void => {
+      camera.scrollY = Math.min(maxScroll, Math.max(0, y));
+    };
 
     let dragging = false;
     let travelled = 0;
@@ -147,7 +159,7 @@ export class BestiaryScene extends Phaser.Scene {
       if (!dragging || !pointer.isDown) return;
       const dy = pointer.y - pointer.prevPosition.y;
       travelled += Math.abs(dy);
-      if (travelled > DRAG_THRESHOLD) camera.scrollY -= dy;
+      if (travelled > DRAG_THRESHOLD) scrollTo(camera.scrollY - dy / scale);
     });
     this.input.on(Phaser.Input.Events.POINTER_UP, () => {
       dragging = false;
@@ -155,7 +167,7 @@ export class BestiaryScene extends Phaser.Scene {
     this.input.on(
       Phaser.Input.Events.POINTER_WHEEL,
       (_pointer: Phaser.Input.Pointer, _over: unknown, _dx: number, dy: number) => {
-        camera.scrollY += dy;
+        scrollTo(camera.scrollY + dy);
       },
     );
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => {

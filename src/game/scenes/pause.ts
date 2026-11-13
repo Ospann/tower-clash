@@ -3,7 +3,7 @@ import { GameEvent, SceneKey } from '../keys';
 import { services } from '../services';
 import { Button } from '../ui/button';
 import { onHotkey } from '../ui/hotkeys';
-import { restartOnResize } from '../ui/screen';
+import { currentScreen, fitUiCamera, restartOnResize } from '../ui/screen';
 import { addLabel } from '../ui/text';
 
 let resumeGameplay = false;
@@ -15,7 +15,8 @@ export class PauseScene extends Phaser.Scene {
 
   create(): void {
     const { i18n } = services();
-    const { width, height } = this.scale;
+    fitUiCamera(this);
+    const { width, height } = currentScreen();
 
     this.add.rectangle(0, 0, width, height, 0x000000, 0.7).setOrigin(0).setInteractive();
     addLabel(this, width / 2, height * 0.36, i18n.t('pause.title'), 80);

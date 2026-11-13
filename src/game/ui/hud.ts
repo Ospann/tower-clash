@@ -1,12 +1,13 @@
 import type Phaser from 'phaser';
 import type { GameI18n } from '../../i18n';
-import { ATLAS_KEY, Frame, hexToInt, palette, turretFrame } from '../art';
+import { Frame, hexToInt, palette, turretFrame, uiImage } from '../art';
 import type { TurretKind } from '../balance';
-import { layout } from '../config';
+import type { Insets } from '../render/camera-math';
 import { ABILITY_KINDS, type AbilityKind } from '../sim/loadout';
 import type { TurretSpec } from '../sim/turrets';
 import { Button } from './button';
-import { MAP_HEIGHT, MAP_WIDTH, type ScreenLayout } from './screen-layout';
+import { Minimap, type MinimapSetup } from './minimap';
+import type { ScreenLayout } from './screen-layout';
 import { addLabel } from './text';
 
 export const UI_DEPTH = 100;
@@ -17,13 +18,24 @@ export const ABILITY_KEYS: Readonly<Record<AbilityKind, string>> = {
   bigBang: 'E',
 };
 
+const BARS = {
+  portrait: { top: 88, bottom: 150 },
+  landscape: { top: 96, bottom: 180 },
+} as const;
+
+export function hudInsets(screen: ScreenLayout): Insets {
+  const bars = BARS[screen.mode];
+  return { top: bars.top, bottom: bars.bottom, left: 0, right: 0 };
+}
+
 export interface HudHandlers {
   onPause: () => void;
-  onSpeed: () => void;
   onFight: () => void;
   onReset: () => void;
   onPick: (kind: TurretKind) => void;
   onAbility: (kind: AbilityKind) => void;
+  onRevive: () => void;
+  onGiveUp: () => void;
 }
 
 export interface HudSetup {
@@ -31,6 +43,7 @@ export interface HudSetup {
   specs: Readonly<Record<TurretKind, TurretSpec>>;
   levelName: string;
   handlers: HudHandlers;
+  minimap: MinimapSetup;
 }
 
 export interface AbilityView {
@@ -48,10 +61,11 @@ export interface HudView {
   turretLimit: number;
   status: string;
   battle: boolean;
-  speed: number;
+  defeat: boolean;
   armedKind: TurretKind | null;
   infoKind: TurretKind | null;
   abilities: Record<AbilityKind, AbilityView>;
+  camera: { x: number; y: number; width: number; height: number };
 }
 
 interface AbilityButton {
@@ -81,7 +95,6 @@ export class Hud {
   private readonly hpHeight: number;
   private readonly turretText: Phaser.GameObjects.Text;
   private readonly statusText: Phaser.GameObjects.Text;
-  private readonly speedButton: Button;
   private readonly fightButton: Button;
   private readonly paletteButtons = new Map<TurretKind, Button>();
   private readonly paletteBaseY = new Map<TurretKind, number>();
@@ -89,7 +102,9 @@ export class Hud {
   private readonly hintBack: Phaser.GameObjects.Rectangle;
   private readonly hintText: Phaser.GameObjects.Text;
   private readonly info: InfoCard | null;
-  private noAbilities: Phaser.GameObjects.Text | null = null;
+  private readonly noAbilities: Phaser.GameObjects.Text;
+  private readonly minimap: Minimap;
+  private readonly defeatLayer: Phaser.GameObjects.Container;
   private hovered: TurretKind | null = null;
   private shownInfo: TurretKind | null = null;
   private lastHp = -1;
@@ -102,206 +117,202 @@ export class Hud {
   ) {
     this.landscape = screen.mode === 'landscape';
     const { handlers } = setup;
+    const { width, height } = screen;
+    const bars = BARS[screen.mode];
+
+    scene.add.rectangle(0, 0, width, bars.top, DARK, 0.92).setOrigin(0).setInteractive();
+    const topY = bars.top / 2;
 
     if (this.landscape) {
-      const left = screen.mapX;
-      const right = screen.mapX + MAP_WIDTH;
-      const panel = screen.panelWidth;
-      const content = Math.min(panel - 56, 440);
-      const lx = left / 2;
-      const rx = right + panel / 2;
-      scene.add.rectangle(0, 0, left, MAP_HEIGHT, DARK, 1).setOrigin(0).setInteractive();
-      scene.add.rectangle(right, 0, panel, MAP_HEIGHT, DARK, 1).setOrigin(0).setInteractive();
-      scene.add.rectangle(left - 4, 0, 4, MAP_HEIGHT, PANEL_LIGHT, 1).setOrigin(0);
-      scene.add.rectangle(right, 0, 4, MAP_HEIGHT, PANEL_LIGHT, 1).setOrigin(0);
-
-      addLabel(scene, lx, 76, setup.levelName, 40, palette.gold)
-        .setFontStyle('bold')
-        .setWordWrapWidth(content);
-      scene.add.image(lx - content / 2 + 22, 170, ATLAS_KEY, Frame.Heart).setScale(1.2);
-      this.hpWidth = content - 60;
-      this.hpHeight = 40;
-      const barX = lx - content / 2 + 56;
-      scene.add.rectangle(barX, 150, this.hpWidth, this.hpHeight, 0x000000, 0.55).setOrigin(0);
-      this.hpFill = scene.add
-        .rectangle(barX + 3, 153, this.hpWidth - 6, this.hpHeight - 6, hexToInt(palette.ok))
+      addLabel(scene, 30, topY, setup.levelName, 34, palette.gold)
+        .setOrigin(0, 0.5)
+        .setFontStyle('bold');
+      const hpX = Math.max(420, width * 0.24);
+      uiImage(scene, hpX, topY, Frame.Heart, 1.1);
+      this.hpWidth = 260;
+      this.hpHeight = 38;
+      scene.add
+        .rectangle(hpX + 30, topY - 19, this.hpWidth, this.hpHeight, 0x000000, 0.55)
         .setOrigin(0);
-      this.hpText = addLabel(scene, barX + this.hpWidth / 2, 170, '', 28);
-      this.statusText = addLabel(scene, lx, 260, '', 40);
-      scene.add.image(lx - 60, 340, ATLAS_KEY, Frame.TurretBase).setScale(0.8);
-      this.turretText = addLabel(scene, lx - 22, 340, '', 36).setOrigin(0, 0.5);
-
-      const pause = new Button(scene, lx, MAP_HEIGHT - 90, '', handlers.onPause, {
-        width: content,
-        height: 100,
+      this.hpFill = scene.add
+        .rectangle(hpX + 33, topY - 16, this.hpWidth - 6, this.hpHeight - 6, hexToInt(palette.ok))
+        .setOrigin(0);
+      this.hpText = addLabel(scene, hpX + 30 + this.hpWidth / 2, topY, '', 26);
+      this.statusText = addLabel(scene, width / 2 + 160, topY, '', 36);
+      uiImage(scene, width / 2 + 380, topY, Frame.TurretBase, 0.75);
+      this.turretText = addLabel(scene, width / 2 + 410, topY, '', 32).setOrigin(0, 0.5);
+      const pause = new Button(scene, width - 130, topY, '', handlers.onPause, {
+        width: 220,
+        height: 72,
         color: PANEL_LIGHT,
       });
-      pause.add(scene.add.image(-content / 2 + 50, 0, ATLAS_KEY, Frame.Pause));
-      pause.add(addLabel(scene, 20, 0, `${i18n.t('hud.pause')}  (Esc)`, 30));
+      pause.add([
+        uiImage(scene, -70, 0, Frame.Pause),
+        addLabel(scene, 20, 0, `${i18n.t('hud.pause')} (Esc)`, 24),
+      ]);
+    } else {
+      uiImage(scene, 34, topY, Frame.Heart);
+      this.hpWidth = 170;
+      this.hpHeight = 32;
+      scene.add.rectangle(62, topY - 16, this.hpWidth, this.hpHeight, 0x000000, 0.55).setOrigin(0);
+      this.hpFill = scene.add
+        .rectangle(65, topY - 13, this.hpWidth - 6, this.hpHeight - 6, hexToInt(palette.ok))
+        .setOrigin(0);
+      this.hpText = addLabel(scene, 62 + this.hpWidth / 2, topY, '', 24);
+      uiImage(scene, 274, topY, Frame.TurretBase, 0.62);
+      this.turretText = addLabel(scene, 300, topY, '', 28).setOrigin(0, 0.5);
+      this.statusText = addLabel(scene, 500, topY, '', 28);
+      const pause = new Button(scene, width - 50, topY, '', handlers.onPause, {
+        width: 72,
+        height: 68,
+        color: PANEL_LIGHT,
+      });
+      pause.add(uiImage(scene, 0, 0, Frame.Pause));
+    }
 
-      this.prepGroup = scene.add.container(0, 0);
-      this.battleGroup = scene.add.container(0, 0);
-      this.prepGroup.add(addLabel(scene, rx, 70, i18n.t('hud.turrets'), 36).setFontStyle('bold'));
-      const cell = (content - 16) / 2;
-      setup.kinds.forEach((kind, index) => {
-        const x = rx - content / 2 + cell / 2 + (index % 2) * (cell + 16);
-        const y = 200 + Math.floor(index / 2) * 170;
-        const button = new Button(scene, x, y, '', () => undefined, {
-          width: cell,
-          height: 156,
-          color: PANEL_LIGHT,
-        });
+    const panelWidth = this.landscape ? Math.min(width - 40, 1180) : width;
+    const panelX = (width - panelWidth) / 2;
+    const panelHeight = this.landscape ? bars.bottom - 20 : bars.bottom;
+    const panelY = this.landscape ? height - bars.bottom + 10 : height - bars.bottom;
+    const cy = panelHeight / 2;
+    const back = (): Phaser.GameObjects.Shape =>
+      this.landscape
+        ? scene.add
+            .rectangle(0, 0, panelWidth, panelHeight, DARK, 0.92)
+            .setOrigin(0)
+            .setStrokeStyle(3, PANEL_LIGHT)
+            .setInteractive()
+        : scene.add
+            .rectangle(0, 0, panelWidth, panelHeight, DARK, 0.94)
+            .setOrigin(0)
+            .setInteractive();
+
+    this.prepGroup = scene.add.container(panelX, panelY);
+    this.prepGroup.add(back());
+    const cell = this.landscape ? 140 : 72;
+    const cellGap = this.landscape ? 12 : 6;
+    setup.kinds.forEach((kind, index) => {
+      const x = (this.landscape ? 20 : 8) + cell / 2 + index * (cell + cellGap);
+      const button = new Button(scene, x, cy, '', () => undefined, {
+        width: cell,
+        height: this.landscape ? 140 : 108,
+        color: PANEL_LIGHT,
+      });
+      const iconScale = this.landscape ? 1.1 : 0.9;
+      const iconY = this.landscape ? -16 : -8;
+      button.add([
+        uiImage(scene, 0, iconY, Frame.TurretBase, iconScale),
+        uiImage(scene, 0, iconY, turretFrame(kind), iconScale).setAngle(-90),
+      ]);
+      if (this.landscape) {
         button.add([
-          scene.add.image(0, -20, ATLAS_KEY, Frame.TurretBase).setScale(1.2),
-          scene.add.image(0, -20, ATLAS_KEY, turretFrame(kind)).setScale(1.2).setAngle(-90),
-          addLabel(scene, 0, 50, i18n.t(`turret.${kind}`), 24),
-          addLabel(scene, -cell / 2 + 22, -58, String(index + 1), 26, palette.gold).setFontStyle(
+          addLabel(scene, 0, 46, i18n.t(`turret.${kind}`), 20),
+          addLabel(scene, -cell / 2 + 18, -52, String(index + 1), 24, palette.gold).setFontStyle(
             'bold',
           ),
         ]);
-        this.bindPalette(button, kind, y);
-        this.prepGroup.add(button);
-      });
-
-      this.info = this.buildInfo(rx, 760, content);
-      this.prepGroup.add(this.info.root);
-
-      const reset = new Button(
-        scene,
-        rx,
-        MAP_HEIGHT - 220,
-        i18n.t('prep.reset'),
-        handlers.onReset,
-        {
-          width: content,
-          height: 90,
-          fontSize: 30,
-          color: 0x3a3f58,
-        },
-      );
-      this.fightButton = new Button(
-        scene,
-        rx,
-        MAP_HEIGHT - 90,
-        `${i18n.t('prep.fight')}  (Space)`,
-        handlers.onFight,
-        { width: content, height: 120, fontSize: 40, color: 0x2eb872 },
-      );
-      this.prepGroup.add([reset, this.fightButton]);
-
-      this.battleGroup.add(
-        addLabel(scene, rx, 70, i18n.t('hud.abilities'), 36).setFontStyle('bold'),
-      );
-      ABILITY_KINDS.forEach((kind, index) => {
-        const item = this.buildAbility(rx, 220 + index * 190, content, 170, 30, kind);
-        item.button.add(
-          addLabel(
-            scene,
-            -content / 2 + 26,
-            -60,
-            ABILITY_KEYS[kind],
-            26,
-            palette.gold,
-          ).setFontStyle('bold'),
-        );
-        this.battleGroup.add(item.button);
-      });
-      this.speedButton = new Button(scene, rx, MAP_HEIGHT - 90, '', handlers.onSpeed, {
-        width: content,
-        height: 120,
-        fontSize: 40,
-        color: PANEL_LIGHT,
-      });
-      this.noAbilities = addLabel(scene, rx, 220, i18n.t('hud.noAbilities'), 26, palette.uiMuted)
-        .setWordWrapWidth(content)
-        .setVisible(false);
-      this.battleGroup.add([this.speedButton, this.noAbilities]);
-
-      this.hintBack = scene.add
-        .rectangle(left + MAP_WIDTH / 2, 70, MAP_WIDTH - 40, 64, DARK, 0.86)
-        .setVisible(false);
-      this.hintText = addLabel(scene, left + MAP_WIDTH / 2, 70, '', 25)
-        .setVisible(false)
-        .setWordWrapWidth(MAP_WIDTH - 70);
-      return;
-    }
-
-    scene.add
-      .rectangle(0, 0, MAP_WIDTH, layout.hudHeight, DARK, 0.94)
-      .setOrigin(0)
-      .setInteractive();
-    scene.add.image(34, 44, ATLAS_KEY, Frame.Heart);
-    this.hpWidth = 170;
-    this.hpHeight = 32;
-    scene.add.rectangle(62, 28, this.hpWidth, this.hpHeight, 0x000000, 0.55).setOrigin(0);
-    this.hpFill = scene.add
-      .rectangle(65, 31, this.hpWidth - 6, this.hpHeight - 6, hexToInt(palette.ok))
-      .setOrigin(0);
-    this.hpText = addLabel(scene, 62 + this.hpWidth / 2, 44, '', 24);
-    scene.add.image(274, 44, ATLAS_KEY, Frame.TurretBase).setScale(0.62);
-    this.turretText = addLabel(scene, 300, 44, '', 28).setOrigin(0, 0.5);
-    this.statusText = addLabel(scene, 500, 44, '', 28);
-    const pause = new Button(scene, 670, 44, '', handlers.onPause, {
-      width: 72,
-      height: 68,
-      color: PANEL_LIGHT,
-    });
-    pause.add(scene.add.image(0, 0, ATLAS_KEY, Frame.Pause));
-
-    const barHeight = MAP_HEIGHT - layout.bottomBarY;
-    const cy = barHeight / 2;
-    const back = (): Phaser.GameObjects.Rectangle =>
-      scene.add.rectangle(0, 0, MAP_WIDTH, barHeight, DARK, 0.95).setOrigin(0).setInteractive();
-
-    this.prepGroup = scene.add.container(0, layout.bottomBarY);
-    this.prepGroup.add(back());
-    setup.kinds.forEach((kind, index) => {
-      const button = new Button(scene, 44 + index * 78, cy, '', () => undefined, {
-        width: 72,
-        height: 108,
-        color: PANEL_LIGHT,
-      });
-      button.add([
-        scene.add.image(0, -8, ATLAS_KEY, Frame.TurretBase).setScale(0.9),
-        scene.add.image(0, -8, ATLAS_KEY, turretFrame(kind)).setScale(0.9).setAngle(-90),
-      ]);
+      }
       this.bindPalette(button, kind, cy);
       this.prepGroup.add(button);
     });
-    const reset = new Button(scene, 532, cy, i18n.t('prep.reset'), handlers.onReset, {
-      width: 96,
-      height: 108,
-      fontSize: 22,
-      color: 0x3a3f58,
-    });
-    this.fightButton = new Button(scene, 650, cy, i18n.t('prep.fight'), handlers.onFight, {
-      width: 124,
-      height: 108,
-      fontSize: 30,
-      color: 0x2eb872,
-    });
+    const resetWidth = this.landscape ? 170 : 96;
+    const fightWidth = this.landscape ? 280 : 124;
+    const reset = new Button(
+      scene,
+      panelWidth - fightWidth - resetWidth / 2 - (this.landscape ? 34 : 14),
+      cy,
+      i18n.t('prep.reset'),
+      handlers.onReset,
+      {
+        width: resetWidth,
+        height: this.landscape ? 110 : 108,
+        fontSize: this.landscape ? 28 : 22,
+        color: 0x3a3f58,
+      },
+    );
+    this.fightButton = new Button(
+      scene,
+      panelWidth - fightWidth / 2 - (this.landscape ? 20 : 8),
+      cy,
+      this.landscape ? `${i18n.t('prep.fight')} (Space)` : i18n.t('prep.fight'),
+      handlers.onFight,
+      {
+        width: fightWidth,
+        height: this.landscape ? 120 : 108,
+        fontSize: this.landscape ? 34 : 30,
+        color: 0x2eb872,
+      },
+    );
     this.prepGroup.add([reset, this.fightButton]);
 
-    this.battleGroup = scene.add.container(0, layout.bottomBarY);
-    this.speedButton = new Button(scene, 62, cy, '', handlers.onSpeed, {
-      width: 100,
-      height: 108,
-      fontSize: 36,
-      color: PANEL_LIGHT,
-    });
-    this.battleGroup.add([back(), this.speedButton]);
+    this.battleGroup = scene.add.container(panelX, panelY);
+    this.battleGroup.add(back());
+    const abilityWidth = this.landscape ? 300 : 220;
+    const abilityGap = this.landscape ? 24 : 12;
+    const abilitiesWidth =
+      ABILITY_KINDS.length * abilityWidth + (ABILITY_KINDS.length - 1) * abilityGap;
     ABILITY_KINDS.forEach((kind, index) => {
-      const item = this.buildAbility(222 + index * 196, cy, 186, 108, 21, kind);
+      const x =
+        (panelWidth - abilitiesWidth) / 2 + abilityWidth / 2 + index * (abilityWidth + abilityGap);
+      const item = this.buildAbility(
+        x,
+        cy,
+        abilityWidth,
+        this.landscape ? 120 : 108,
+        this.landscape ? 28 : 22,
+        kind,
+      );
+      if (this.landscape) {
+        item.button.add(
+          addLabel(
+            scene,
+            -abilityWidth / 2 + 22,
+            -42,
+            ABILITY_KEYS[kind],
+            24,
+            palette.gold,
+          ).setFontStyle('bold'),
+        );
+      }
       this.battleGroup.add(item.button);
     });
-    this.info = null;
-
-    this.hintBack = scene.add
-      .rectangle(MAP_WIDTH / 2, 134, MAP_WIDTH - 40, 64, DARK, 0.86)
+    this.noAbilities = addLabel(
+      scene,
+      panelWidth / 2,
+      cy,
+      i18n.t('hud.noAbilities'),
+      26,
+      palette.uiMuted,
+    )
+      .setWordWrapWidth(panelWidth - 40)
       .setVisible(false);
-    this.hintText = addLabel(scene, MAP_WIDTH / 2, 134, '', 25)
+    this.battleGroup.add(this.noAbilities);
+
+    this.info = this.landscape
+      ? this.buildInfo(width - 220, height - bars.bottom - 170, 400)
+      : null;
+
+    const box = this.landscape ? 230 : 150;
+    this.minimap = new Minimap(scene, width - 14, bars.top + 14, box, setup.minimap);
+    const toggle = new Button(
+      scene,
+      width - 14 - 26,
+      bars.top + 14 + this.minimap.height + 36,
+      '▣',
+      () => this.minimap.root.setVisible(!this.minimap.root.visible),
+      { width: 52, height: 52, fontSize: 26, color: PANEL_LIGHT },
+    );
+    toggle.setAlpha(0.85);
+
+    const hintY = bars.top + 46;
+    const hintWidth = Math.min(width - 40 - (this.landscape ? 0 : box + 24), 760);
+    const hintX = this.landscape ? width / 2 : 20 + hintWidth / 2;
+    this.hintBack = scene.add.rectangle(hintX, hintY, hintWidth, 64, DARK, 0.86).setVisible(false);
+    this.hintText = addLabel(scene, hintX, hintY, '', this.landscape ? 26 : 23)
       .setVisible(false)
-      .setWordWrapWidth(MAP_WIDTH - 70);
+      .setWordWrapWidth(hintWidth - 30);
+
+    this.defeatLayer = this.buildDefeat(width, height);
   }
 
   setHint(text: string | null): void {
@@ -315,7 +326,7 @@ export class Hud {
     }
   }
 
-  update(view: HudView, time: number): void {
+  update(view: HudView, time: number, delta: number): void {
     const { i18n } = this;
     const hp = Math.ceil(view.hp);
     if (hp !== this.lastHp) {
@@ -330,6 +341,8 @@ export class Hud {
     const turrets = `${view.turrets}/${view.turretLimit}`;
     if (this.turretText.text !== turrets) this.turretText.setText(turrets);
     if (this.statusText.text !== view.status) this.statusText.setText(view.status);
+    this.minimap.update(delta, view.camera);
+    this.defeatLayer.setVisible(view.defeat);
 
     this.prepGroup.setVisible(!view.battle);
     this.battleGroup.setVisible(view.battle);
@@ -345,9 +358,8 @@ export class Hud {
       this.showInfo(this.hovered ?? view.armedKind ?? view.infoKind);
       return;
     }
-    const speed = i18n.t('hud.speed', { speed: view.speed });
-    this.speedButton.setText(this.landscape ? `${speed}  (Space)` : speed);
-    this.noAbilities?.setVisible(!ABILITY_KINDS.some((kind) => view.abilities[kind].unlocked));
+    this.showInfo(null);
+    this.noAbilities.setVisible(!ABILITY_KINDS.some((kind) => view.abilities[kind].unlocked));
     for (const [kind, item] of this.abilityButtons) {
       const state = view.abilities[kind];
       item.button.setVisible(state.unlocked);
@@ -362,7 +374,7 @@ export class Hud {
             ? '—'
             : String(Math.ceil(state.cooldown));
       if (item.timer.text !== text) item.timer.setText(text);
-      item.label.setY(text === '' ? 0 : -22);
+      item.label.setY(text === '' ? 0 : -18);
     }
   }
 
@@ -392,10 +404,10 @@ export class Hud {
       height,
       color: 0xc0562b,
     });
-    const label = addLabel(scene, 0, -22, i18n.t(`ability.${kind}`), fontSize).setWordWrapWidth(
+    const label = addLabel(scene, 0, -18, i18n.t(`ability.${kind}`), fontSize).setWordWrapWidth(
       width - 16,
     );
-    const timer = addLabel(scene, 0, 24, '', fontSize + 9, palette.gold);
+    const timer = addLabel(scene, 0, 26, '', fontSize + 6, palette.gold);
     button.add([label, timer]);
     const item = { button, label, timer };
     this.abilityButtons.set(kind, item);
@@ -405,14 +417,9 @@ export class Hud {
   private buildInfo(x: number, y: number, width: number): InfoCard {
     const { scene } = this;
     const root = scene.add.container(x, y);
-    const back = scene.add
-      .rectangle(0, 0, width, 300, hexToInt(palette.uiPanel), 1)
-      .setStrokeStyle(2, PANEL_LIGHT);
-    const base = scene.add.image(-width / 2 + 60, -90, ATLAS_KEY, Frame.TurretBase).setScale(1.3);
-    const head = scene.add
-      .image(-width / 2 + 60, -90, ATLAS_KEY, Frame.TurretBase)
-      .setScale(1.3)
-      .setAngle(-90);
+    const back = scene.add.rectangle(0, 0, width, 300, DARK, 0.92).setStrokeStyle(2, PANEL_LIGHT);
+    const base = uiImage(scene, -width / 2 + 60, -90, Frame.TurretBase, 1.3);
+    const head = uiImage(scene, -width / 2 + 60, -90, Frame.TurretBase, 1.3).setAngle(-90);
     const name = addLabel(scene, -width / 2 + 110, -90, '', 30, palette.gold)
       .setOrigin(0, 0.5)
       .setFontStyle('bold');
@@ -427,6 +434,46 @@ export class Hud {
     root.add([back, base, head, name, desc, stats]);
     root.setVisible(false);
     return { root, head, name, desc, stats };
+  }
+
+  private buildDefeat(width: number, height: number): Phaser.GameObjects.Container {
+    const { scene, i18n } = this;
+    const { handlers } = this.setup;
+    const layer = scene.add.container(0, 0).setDepth(UI_DEPTH);
+    const dim = scene.add
+      .rectangle(0, 0, width, height, 0x000000, 0.7)
+      .setOrigin(0)
+      .setInteractive();
+    const title = addLabel(scene, width / 2, height * 0.34, i18n.t('defeat.title'), 60);
+    const revive = new Button(
+      scene,
+      width / 2,
+      height * 0.48,
+      i18n.t('defeat.revive'),
+      handlers.onRevive,
+      {
+        width: 520,
+        height: 150,
+        fontSize: 38,
+        color: 0x7d4bc4,
+      },
+    );
+    const giveUp = new Button(
+      scene,
+      width / 2,
+      height * 0.62,
+      i18n.t('defeat.giveUp'),
+      handlers.onGiveUp,
+      {
+        width: 400,
+        height: 100,
+        fontSize: 36,
+        color: 0x3a3f58,
+      },
+    );
+    layer.add([dim, title, revive, giveUp]);
+    layer.setVisible(false);
+    return layer;
   }
 
   private showInfo(kind: TurretKind | null): void {

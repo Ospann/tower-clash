@@ -18,15 +18,10 @@ export const gameConfig = {
   },
 } as const;
 
-export const layout = {
-  hudHeight: 88,
-  bottomBarY: 1130,
-} as const;
-
 export const simConfig = {
   stepSec: 1 / 60,
   maxStepsPerFrame: 5,
-  hordeCapacity: 4096,
+  hordeCapacity: 6144,
   hashCellSize: 24,
   projectileCapacity: 512,
   particleLimit: 400,

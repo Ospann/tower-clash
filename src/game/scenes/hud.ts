@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { SceneKey } from '../keys';
 import { services } from '../services';
 import { Hud, type HudSetup } from '../ui/hud';
-import { currentScreen, onScreenChange } from '../ui/screen';
+import { currentScreen, fitUiCamera, onScreenChange } from '../ui/screen';
 
 export class HudScene extends Phaser.Scene {
   hud: Hud | null = null;
@@ -18,6 +18,7 @@ export class HudScene extends Phaser.Scene {
   }
 
   create(): void {
+    fitUiCamera(this);
     this.hud = new Hud(this, services().i18n, this.setup, currentScreen());
     onScreenChange(this, () => {
       this.scene.restart(this.setup);

@@ -7,6 +7,7 @@ const frameOf: Readonly<Record<number, string>> = {
   [ProjectileKind.Shell]: Frame.Ball,
   [ProjectileKind.Flask]: Frame.Flask,
   [ProjectileKind.Bomb]: Frame.Bomb,
+  [ProjectileKind.Rocket]: Frame.Rocket,
 };
 
 const ARC_HEIGHT = 80;
@@ -42,6 +43,10 @@ export class ProjectileRenderer {
         image.setPosition(p.x, p.y);
         image.rotation = Math.atan2(p.ty - p.y, p.tx - p.x);
         image.setScale(1.3);
+      } else if (p.kind === ProjectileKind.Rocket) {
+        image.setPosition(p.x, p.y);
+        image.rotation = Math.atan2(p.ty - p.sy, p.tx - p.sx);
+        image.setScale(1.4);
       } else if (p.kind === ProjectileKind.Bomb) {
         image.setPosition(p.x, p.y);
         image.rotation = 0.12;

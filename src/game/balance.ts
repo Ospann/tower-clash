@@ -112,6 +112,8 @@ export const goblins: Readonly<Record<GoblinKind, GoblinStats>> = {
   },
 };
 
+export const gameSpeed = 2;
+
 export const goblinTraits = {
   speedJitter: 0.14,
   shaman: { heal: 14, radius: 90, interval: 1.4 },
@@ -268,6 +270,17 @@ export const abilities = {
   bigBang: { cooldown: 0, damage: 650, bossShare: 0.25, charges: 1 },
 } as const;
 
+export const rocket = {
+  cooldown: 1.2,
+  damage: 34,
+  radius: 46,
+  speed: 1500,
+  minFlight: 0.18,
+  holdDelayMs: 220,
+} as const;
+
+export type RocketStat = 'damage' | 'rate' | 'radius';
+
 export const economy = {
   starThresholds: [0.75, 0.35] as const,
   reviveHpFraction: 0.5,
@@ -296,7 +309,8 @@ export type TreeEffect =
   | { type: 'ability'; ability: AbilityId; stat: AbilityStat }
   | { type: 'limit' }
   | { type: 'baseHp' }
-  | { type: 'reward' };
+  | { type: 'reward' }
+  | { type: 'rocket'; stat: RocketStat };
 
 export interface TreeNode {
   id: string;
@@ -412,6 +426,33 @@ function buildTree(): TreeNode[] {
       baseCost: 20,
       costGrowth: 1.7,
       perLevel: 0.1,
+    },
+    {
+      id: 'rocket.damage',
+      parent: 'core',
+      effect: { type: 'rocket', stat: 'damage' },
+      maxLevel: 6,
+      baseCost: 15,
+      costGrowth: 1.6,
+      perLevel: 0.2,
+    },
+    {
+      id: 'rocket.rate',
+      parent: 'rocket.damage',
+      effect: { type: 'rocket', stat: 'rate' },
+      maxLevel: 5,
+      baseCost: 22,
+      costGrowth: 1.7,
+      perLevel: 0.15,
+    },
+    {
+      id: 'rocket.radius',
+      parent: 'rocket.damage',
+      effect: { type: 'rocket', stat: 'radius' },
+      maxLevel: 4,
+      baseCost: 25,
+      costGrowth: 1.8,
+      perLevel: 0.12,
     },
   ];
   for (const branch of turretBranches) {

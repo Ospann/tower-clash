@@ -54,6 +54,7 @@ export const Frame = {
   Handle: 'ui-handle',
   Remove: 'ui-remove',
   Shell: 'proj-ball',
+  Rocket: 'proj-rocket',
 } as const;
 
 export const GOBLIN_FOOT_OFFSET = 4;

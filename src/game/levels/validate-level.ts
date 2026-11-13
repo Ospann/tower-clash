@@ -1,6 +1,5 @@
 import { GOBLIN_KINDS, spawnRules } from '../balance';
 import { FlowField } from '../sim/flow-field';
-import { layout } from '../config';
 import { GridMap } from '../sim/grid-map';
 import { entryOutward } from '../sim/world';
 import { OBSTACLE_TYPES, TILE_THEMES, type LevelData } from './level-types';
@@ -141,7 +140,7 @@ function checkEntries(value: unknown, issues: Issues, w: number, h: number): Set
     }
     const okX = num(entry.x, `${at}.x`, issues, 0, w);
     const okY = num(entry.y, `${at}.y`, issues, 0, h);
-    num(entry.radius, `${at}.radius`, issues, 10, 400);
+    num(entry.radius, `${at}.radius`, issues, 10, 1200);
     if (okX && okY) {
       const x = Number(entry.x);
       const y = Number(entry.y);
@@ -241,7 +240,7 @@ export function validateLevel(value: unknown): string[] {
   const level = value;
   const map = new GridMap(level);
   const flow = new FlowField(map);
-  const room = map.buildableCount(layout.hudHeight, layout.bottomBarY);
+  const room = map.buildableCount();
   if (room < MIN_BUILDABLE_CELLS) {
     issues.push(
       `obstacles: only ${room} buildable cells, at least ${MIN_BUILDABLE_CELLS} are needed for turrets`,

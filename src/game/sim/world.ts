@@ -5,6 +5,7 @@ import {
   GOBLIN_KINDS,
   goblins,
   goblinTraits,
+  rocket,
   spawnRules,
   TURRET_KINDS,
   turretRules,
@@ -12,7 +13,7 @@ import {
   type GoblinStats,
   type TurretKind,
 } from '../balance';
-import { layout, simConfig } from '../config';
+import { simConfig } from '../config';
 import type { LevelData, Rect } from '../levels/level-types';
 import { rectContains } from './grid-map';
 import { FxEvents, FxKind } from './events';
@@ -109,6 +110,8 @@ export class World {
   baseHp: number;
   baseMaxHp: number;
   bigBangCharges: number = abilities.bigBang.charges;
+  rocketCooldown = 0;
+  rocketsFired = 0;
   kills = 0;
   bounty = 0;
   leaked = 0;
@@ -203,7 +206,7 @@ export class World {
     if (ignoreId < 0 && this.turrets.length >= this.turretLimit) return 'limit';
     const r = turretRules.baseRadius;
     if (x < r || x > this.map.width - r) return 'blocked';
-    if (y < layout.hudHeight + r || y > layout.bottomBarY - r) return 'blocked';
+    if (y < r || y > this.map.height - r) return 'blocked';
     if (!this.map.circleBuildable(x, y, r)) return 'blocked';
     for (const zone of this.level.zones) {
       if (
@@ -306,6 +309,7 @@ export class World {
   step(dt: number): void {
     if (this.phase !== 'battle') return;
     this.time += dt;
+    if (this.rocketCooldown > 0) this.rocketCooldown = Math.max(0, this.rocketCooldown - dt);
     for (const kind of ['airstrike', 'pillar'] as const) {
       if (this.abilityCooldown[kind] > 0) {
         this.abilityCooldown[kind] = Math.max(0, this.abilityCooldown[kind] - dt);
@@ -325,6 +329,40 @@ export class World {
     } else if (this.runner.allSpawned && this.horde.count === 0) {
       this.phase = 'won';
     }
+  }
+
+  get rocketReady(): boolean {
+    return this.phase === 'battle' && this.rocketCooldown <= 0;
+  }
+
+  rocketOrigin(x: number, y: number): { x: number; y: number } {
+    let best = { x: this.map.width / 2, y: this.map.height };
+    let nearest = Number.POSITIVE_INFINITY;
+    for (const zone of this.level.zones) {
+      const cx = zone.x + zone.w / 2;
+      const cy = zone.y + zone.h / 2;
+      const d = Math.hypot(cx - x, cy - y);
+      if (d < nearest) {
+        nearest = d;
+        best = { x: cx, y: cy };
+      }
+    }
+    return best;
+  }
+
+  fireRocket(x: number, y: number): boolean {
+    if (!this.rocketReady || !this.map.inside(x, y)) return false;
+    const mods = this.loadout.rocket;
+    const origin = this.rocketOrigin(x, y);
+    const p = this.projectiles.spawn(ProjectileKind.Rocket, origin.x, origin.y, x, y);
+    if (!p) return false;
+    p.duration = Math.max(rocket.minFlight, Math.hypot(x - origin.x, y - origin.y) / rocket.speed);
+    p.damage = rocket.damage * mods.damage;
+    p.splash = rocket.radius * mods.radius;
+    p.damageType = 'blast';
+    this.rocketCooldown = rocket.cooldown / mods.rate;
+    this.rocketsFired += 1;
+    return true;
   }
 
   abilityReady(kind: AbilityKind): boolean {

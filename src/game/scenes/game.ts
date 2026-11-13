@@ -1,39 +1,43 @@
 import Phaser from 'phaser';
 import { translateKey, type TranslationKey } from '../../i18n';
-import { ATLAS_KEY, Frame, generateLevelMap, hexToInt, palette } from '../art';
+import {
+  Frame,
+  generateLevelMap,
+  hexToInt,
+  MAP_THUMB_KEY,
+  palette,
+  themeColors,
+  UI_KEY,
+  UI_RATIO,
+} from '../art';
 import { Sfx, type SfxName } from '../audio/sfx';
-import { fxLimits, TURRET_KINDS, type TurretKind } from '../balance';
-import { gameConfig, layout, simConfig } from '../config';
+import { fxLimits, gameSpeed, rocket, TURRET_KINDS, type TurretKind } from '../balance';
+import { simConfig } from '../config';
 import { DebugOverlay } from '../debug/debug-overlay';
 import { debugFlags } from '../debug/flags';
 import { StressDriver, stressLevel, stressTurrets } from '../debug/stress';
 import { GameEvent, SceneKey } from '../keys';
 import { levelById, levelIndex, levels } from '../levels';
 import type { LevelData } from '../levels/level-types';
+import { MAX_ZOOM, type Point } from '../render/camera-math';
 import { FxRenderer } from '../render/fx-renderer';
 import { HordeRenderer } from '../render/horde-renderer';
+import { MapCamera } from '../render/map-camera';
 import { ProjectileRenderer } from '../render/projectile-renderer';
 import { TurretRenderer } from '../render/turret-renderer';
 import { sanitizePlacement } from '../save';
 import { services } from '../services';
 import { rewardFor, starsFor } from '../sim/economy';
 import { FX_STRIDE, FxKind, type FxEvents } from '../sim/events';
+import { ProjectileKind } from '../sim/projectiles';
 import { neutralLoadout, unlockedTurrets, type AbilityKind } from '../sim/loadout';
 import { loadoutFrom, sanitizeTree } from '../sim/tree';
 import type { Turret } from '../sim/turrets';
 import { World } from '../sim/world';
-import { Button } from '../ui/button';
-import { UI_DEPTH, type AbilityView, type HudSetup } from '../ui/hud';
-import {
-  currentScreen,
-  MAP_HEIGHT,
-  MAP_WIDTH,
-  onScreenChange,
-  type ScreenLayout,
-} from '../ui/screen';
+import { onHotkey, trackHeldKeys } from '../ui/hotkeys';
+import { hudInsets, type AbilityView, type HudSetup } from '../ui/hud';
+import { currentScreen, onScreenChange, renderScale } from '../ui/screen';
 import type { HudScene } from './hud';
-import { onHotkey } from '../ui/hotkeys';
-import { addLabel } from '../ui/text';
 import { pauseGame } from './pause';
 
 export interface GameSceneData {
@@ -59,7 +63,6 @@ const Depth = {
   Projectiles: 40,
   Air: 50,
   Handles: 60,
-  Overlay: UI_DEPTH + 50,
 } as const;
 
 const shotSound: Readonly<Record<TurretKind, SfxName | null>> = {
@@ -71,7 +74,7 @@ const shotSound: Readonly<Record<TurretKind, SfxName | null>> = {
   beam: null,
 };
 
-type Mode = 'none' | 'drag' | 'rotate' | 'new' | 'swipe';
+type Gesture = 'none' | 'pending' | 'pan' | 'pinch' | 'drag' | 'rotate' | 'swipe';
 
 interface Ghost {
   kind: TurretKind;
@@ -83,11 +86,16 @@ interface Ghost {
 
 const RESULT_DELAY_MS = 900;
 const HINT_MS = 1600;
-const WHEEL_STEP = Math.PI / 18;
+const ROTATE_STEP = Math.PI / 12;
+const TAP_SLOP = 10;
+const COMFORT_ZOOM = 0.6;
+const KEY_PAN_SPEED = 900;
+const PAN_KEYS = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'] as const;
 
 export class GameScene extends Phaser.Scene {
   private level!: LevelData;
   private world!: World;
+  private mapCamera!: MapCamera;
   private hordeRenderer!: HordeRenderer;
   private projectileRenderer!: ProjectileRenderer;
   private turretRenderer!: TurretRenderer;
@@ -96,13 +104,22 @@ export class GameScene extends Phaser.Scene {
   private rotateHandle!: Phaser.GameObjects.Image;
   private removeHandle!: Phaser.GameObjects.Image;
   private swipeLine!: Phaser.GameObjects.Graphics;
+  private heldKeys: Set<string> = new Set();
   private stress: StressDriver | null = null;
   private overlay: DebugOverlay | null = null;
-  private defeat: Phaser.GameObjects.Container | null = null;
   private levelId = '';
   private accumulator = 0;
-  private speed = 1;
-  private mode: Mode = 'none';
+  private gesture: Gesture = 'none';
+  private readonly pointers = new Map<number, Point>();
+  private pinchPrev: [Point, Point] | null = null;
+  private downAt: Point = { x: 0, y: 0 };
+  private downButton = 0;
+  private downTime = 0;
+  private holdFired = false;
+  private lastMove: Point = { x: 0, y: 0 };
+  private lastMoveTime = 0;
+  private velocity: Point = { x: 0, y: 0 };
+  private dropping = false;
   private selected = -1;
   private armedKind: TurretKind | null = null;
   private armedAbility: AbilityKind | null = null;
@@ -116,6 +133,7 @@ export class GameScene extends Phaser.Scene {
   private rotated = false;
   private kinds: readonly TurretKind[] = [];
   private cursor = 'default';
+  private defeated = false;
   private bigBangAdUsed = false;
   private ended = false;
   private busy = false;
@@ -138,18 +156,20 @@ export class GameScene extends Phaser.Scene {
     this.level = level;
 
     this.accumulator = 0;
-    this.speed = 1;
-    this.mode = 'none';
+    this.gesture = 'none';
+    this.pointers.clear();
+    this.pinchPrev = null;
+    this.dropping = false;
     this.selected = -1;
     this.armedKind = null;
     this.armedAbility = null;
     this.ghost = null;
     this.hintKey = null;
     this.rotated = false;
+    this.defeated = false;
     this.bigBangAdUsed = false;
     this.ended = false;
     this.busy = false;
-    this.defeat = null;
     this.tutorial = !stress && !save.data.tutorialSeen && levelIndex(level.id) < 2;
 
     const loadout = stress ? neutralLoadout() : loadoutFrom(sanitizeTree(save.data.tree));
@@ -161,9 +181,10 @@ export class GameScene extends Phaser.Scene {
       manualSpawns: stress,
     });
     const world = this.world;
+    const map = { width: world.map.width, height: world.map.height };
 
     this.add.image(0, 0, generateLevelMap(this.textures, level)).setOrigin(0).setDepth(Depth.Map);
-    this.fx = new FxRenderer(this, world.map.width, world.map.height, {
+    this.fx = new FxRenderer(this, map.width, map.height, {
       decals: Depth.Decals,
       ground: Depth.Ground,
       air: Depth.Air,
@@ -177,16 +198,42 @@ export class GameScene extends Phaser.Scene {
     this.projectileRenderer = new ProjectileRenderer(this, Depth.Projectiles);
     this.sfx = new Sfx(this);
     this.rotateHandle = this.add
-      .image(0, 0, ATLAS_KEY, Frame.Handle)
+      .image(0, 0, UI_KEY, Frame.Handle)
       .setDepth(Depth.Handles)
-      .setScale(1.3)
       .setVisible(false);
     this.removeHandle = this.add
-      .image(0, 0, ATLAS_KEY, Frame.Remove)
+      .image(0, 0, UI_KEY, Frame.Remove)
       .setDepth(Depth.Handles)
-      .setScale(1.35)
       .setVisible(false);
     this.swipeLine = this.add.graphics().setDepth(Depth.Handles);
+
+    const zone = level.zones[0];
+    const focus = zone
+      ? { x: zone.x + zone.w / 2, y: zone.y + zone.h / 2 }
+      : { x: map.width / 2, y: map.height / 2 };
+    this.cameras.main.setViewport(0, 0, this.scale.width, this.scale.height);
+    this.cameras.main.setBackgroundColor(themeColors[level.tiles].plateauFace);
+    this.mapCamera = new MapCamera(
+      this.cameras.main,
+      map,
+      () => {
+        const screen = currentScreen();
+        const insets = hudInsets(screen);
+        return {
+          top: insets.top * screen.scale,
+          bottom: insets.bottom * screen.scale,
+          left: insets.left * screen.scale,
+          right: insets.right * screen.scale,
+        };
+      },
+      () => ({ width: this.scale.width, height: this.scale.height }),
+      focus,
+      COMFORT_ZOOM * renderScale(),
+      MAX_ZOOM * renderScale(),
+    );
+    onScreenChange(this, (screen) =>
+      this.mapCamera.resize(screen.width * screen.scale, screen.height * screen.scale),
+    );
 
     const kinds = unlockedTurrets(loadout);
     this.kinds = kinds;
@@ -196,10 +243,6 @@ export class GameScene extends Phaser.Scene {
       levelName: translateKey(i18n, level.name),
       handlers: {
         onPause: () => pauseGame(this.game),
-        onSpeed: () => {
-          this.speed = this.speed === 1 ? 2 : 1;
-          this.sfx.play('click');
-        },
         onFight: () => this.fight(),
         onReset: () => {
           if (world.phase !== 'prep') return;
@@ -210,11 +253,27 @@ export class GameScene extends Phaser.Scene {
         },
         onPick: (kind) => this.pick(kind),
         onAbility: (kind) => this.onAbility(kind),
+        onRevive: () => void this.revive(),
+        onGiveUp: () => {
+          if (!this.busy) this.finish(false);
+        },
+      },
+      minimap: {
+        width: map.width,
+        height: map.height,
+        thumb: MAP_THUMB_KEY,
+        zones: level.zones,
+        sample: () => ({
+          xs: world.horde.x,
+          ys: world.horde.y,
+          count: world.horde.count,
+          flying: world.horde.flying,
+          turrets: world.turrets,
+        }),
+        onJump: (x, y) => this.mapCamera.focus(x, y),
       },
     };
     this.scene.launch(SceneKey.Hud, hudSetup);
-    this.applyScreen(currentScreen());
-    onScreenChange(this, (screen) => this.applyScreen(screen));
 
     if (stress) {
       for (const spot of stressTurrets) world.addTurret(spot.kind, spot.x, spot.y, spot.angle);
@@ -239,6 +298,9 @@ export class GameScene extends Phaser.Scene {
     this.input.on(Phaser.Input.Events.POINTER_UP, (pointer: Phaser.Input.Pointer) => {
       this.onUp(pointer);
     });
+    this.input.on(Phaser.Input.Events.POINTER_UP_OUTSIDE, (pointer: Phaser.Input.Pointer) => {
+      this.onUp(pointer);
+    });
     this.input.on(
       Phaser.Input.Events.POINTER_WHEEL,
       (pointer: Phaser.Input.Pointer, _over: unknown, _dx: number, dy: number) => {
@@ -248,11 +310,13 @@ export class GameScene extends Phaser.Scene {
     onHotkey(this, (event) => {
       this.onKey(event);
     });
+    this.heldKeys = trackHeldKeys(this, PAN_KEYS);
 
     if (debugFlags.debug) {
       this.overlay = new DebugOverlay(this.game);
       if (import.meta.env.DEV) Object.assign(window, { __debug: this.overlay, __world: world });
     }
+    if (import.meta.env.DEV) Object.assign(window, { __camera: this.mapCamera });
 
     platform.levelStart({ level: level.id });
     gameplay.start();
@@ -281,14 +345,15 @@ export class GameScene extends Phaser.Scene {
     const { ads } = services();
     const world = this.world;
     const started = performance.now();
-    const frozen = this.ended || this.defeat !== null || ads.isBusy;
+    const frozen = this.ended || this.defeated || ads.isBusy;
+    const dt = Math.min(delta, 100) / 1000;
 
     if (!frozen && world.phase === 'battle') {
-      this.accumulator += Math.min(delta, 100) / 1000;
+      this.accumulator += dt;
       let steps = 0;
       while (this.accumulator >= simConfig.stepSec && steps < simConfig.maxStepsPerFrame) {
         this.accumulator -= simConfig.stepSec;
-        for (let n = 0; n < this.speed; n += 1) {
+        for (let n = 0; n < gameSpeed; n += 1) {
           this.stress?.update();
           world.step(simConfig.stepSec);
         }
@@ -298,23 +363,27 @@ export class GameScene extends Phaser.Scene {
     }
     const simMs = performance.now() - started;
 
+    this.holdFire();
+    this.panWithKeys(dt);
+    this.mapCamera.update(dt);
+
     this.fx.consume(world.events);
     this.react(world.events);
     world.events.clear();
 
     const now = this.time.now / 1000;
-    const dt = Math.min(delta, 100) / 1000;
     this.hordeRenderer.sync(world.horde, world.time);
     this.projectileRenderer.sync(world.projectiles);
+    if (!frozen) this.rocketTrails();
     this.turretRenderer.sync(world, now);
-    this.fx.update(frozen ? 0 : dt * this.speed, world.zones, now);
+    this.fx.update(frozen ? 0 : dt * gameSpeed, world.zones, now);
     this.syncPrep();
-    this.syncHud(now);
+    this.syncHud(now, delta);
     this.syncCursor();
 
     if (!this.ended && !this.stress) {
       if (world.phase === 'won') this.finish(true);
-      else if (world.phase === 'lost' && !this.defeat) {
+      else if (world.phase === 'lost' && !this.defeated) {
         if (world.revived) this.finish(false);
         else this.openDefeat();
       }
@@ -328,17 +397,34 @@ export class GameScene extends Phaser.Scene {
     });
   }
 
-  private inMap(x: number, y: number): boolean {
-    return x >= 0 && x <= MAP_WIDTH && y > layout.hudHeight && y < layout.bottomBarY;
-  }
-
   private get hud(): HudScene['hud'] {
     if (!this.scene.isActive(SceneKey.Hud) && !this.scene.isPaused(SceneKey.Hud)) return null;
     return this.game.scene.getScene<HudScene>(SceneKey.Hud).hud;
   }
 
-  private applyScreen(screen: ScreenLayout): void {
-    this.cameras.main.setViewport(screen.mapX, 0, MAP_WIDTH, MAP_HEIGHT);
+  private inMap(x: number, y: number): boolean {
+    return this.world.map.inside(x, y);
+  }
+
+  private screenPx(pixels: number): number {
+    return (pixels * renderScale()) / this.mapCamera.zoom;
+  }
+
+  private handlePoint(turret: Turret, back: boolean): Point {
+    const spec = this.world.specs[turret.kind];
+    const reach = back
+      ? Math.max(62, this.screenPx(56))
+      : Math.max(Math.min(Math.max(spec.range * 0.5, 90), 140), this.screenPx(80));
+    const angle = back ? turret.angle + Math.PI : turret.angle;
+    const pad = this.screenPx(30);
+    return {
+      x: Phaser.Math.Clamp(turret.x + Math.cos(angle) * reach, pad, this.world.map.width - pad),
+      y: Phaser.Math.Clamp(turret.y + Math.sin(angle) * reach, pad, this.world.map.height - pad),
+    };
+  }
+
+  private turretUnder(x: number, y: number): Turret | undefined {
+    return this.world.turretAt(x, y, Math.max(36, this.screenPx(34)));
   }
 
   private pick(kind: TurretKind): void {
@@ -346,8 +432,8 @@ export class GameScene extends Phaser.Scene {
     const same = this.armedKind === kind;
     this.armedKind = same ? null : kind;
     this.selected = -1;
-    this.mode = same ? 'none' : 'new';
     this.ghost = null;
+    this.dropping = !same && this.input.activePointer.isDown;
     this.sfx.play('click');
   }
 
@@ -358,13 +444,22 @@ export class GameScene extends Phaser.Scene {
     this.savePlacement();
   }
 
+  private rotateSelected(step: number): void {
+    const turret = this.world.turretById(this.selected);
+    if (!turret || turret.kind === 'tesla' || this.world.phase !== 'prep') return;
+    this.world.rotateTurret(turret.id, turret.angle + step);
+    this.rotated = true;
+    this.savePlacement();
+  }
+
   private cancel(): boolean {
-    if (this.armedKind || this.armedAbility || this.selected >= 0 || this.mode !== 'none') {
+    if (this.armedKind || this.armedAbility || this.selected >= 0 || this.gesture !== 'none') {
       this.armedKind = null;
       this.armedAbility = null;
       this.selected = -1;
-      this.mode = 'none';
+      this.gesture = 'none';
       this.ghost = null;
+      this.dropping = false;
       this.swipeLine.clear();
       return true;
     }
@@ -372,7 +467,7 @@ export class GameScene extends Phaser.Scene {
   }
 
   private onKey(event: KeyboardEvent): void {
-    if (this.ended || this.defeat) return;
+    if (this.ended || this.defeated) return;
     const world = this.world;
     const digit = /^(?:Digit|Numpad)([1-9])$/.exec(event.code);
     if (digit) {
@@ -384,10 +479,6 @@ export class GameScene extends Phaser.Scene {
       case 'Space':
         event.preventDefault();
         if (world.phase === 'prep') this.fight();
-        else if (world.phase === 'battle') {
-          this.speed = this.speed === 1 ? 2 : 1;
-          this.sfx.play('click');
-        }
         return;
       case 'KeyQ':
         this.onAbility('airstrike');
@@ -398,9 +489,23 @@ export class GameScene extends Phaser.Scene {
       case 'KeyE':
         this.onAbility('bigBang');
         return;
+      case 'KeyR':
+        this.rotateSelected(event.shiftKey ? -ROTATE_STEP : ROTATE_STEP);
+        return;
       case 'Delete':
       case 'Backspace':
         this.removeSelected();
+        return;
+      case 'Equal':
+      case 'NumpadAdd':
+        this.mapCamera.zoomBy(1.25);
+        return;
+      case 'Minus':
+      case 'NumpadSubtract':
+        this.mapCamera.zoomBy(0.8);
+        return;
+      case 'Home':
+        this.mapCamera.fit();
         return;
       case 'Escape':
         if (!this.cancel()) pauseGame(this.game);
@@ -409,76 +514,61 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
+  private panWithKeys(dt: number): void {
+    if (this.heldKeys.size === 0) return;
+    let dx = 0;
+    let dy = 0;
+    if (this.heldKeys.has('ArrowLeft')) dx += 1;
+    if (this.heldKeys.has('ArrowRight')) dx -= 1;
+    if (this.heldKeys.has('ArrowUp')) dy += 1;
+    if (this.heldKeys.has('ArrowDown')) dy -= 1;
+    const speed = KEY_PAN_SPEED * renderScale() * dt;
+    if (dx !== 0 || dy !== 0) this.mapCamera.pan(dx * speed, dy * speed);
+  }
+
   private onWheel(pointer: Phaser.Input.Pointer, dy: number): void {
-    const world = this.world;
-    if (world.phase !== 'prep' || this.ended || dy === 0) return;
-    const hovered = world.turretAt(pointer.worldX, pointer.worldY);
-    const turret = hovered ?? world.turretById(this.selected);
-    if (!turret || turret.kind === 'tesla') return;
-    this.selected = turret.id;
-    world.rotateTurret(turret.id, turret.angle + Math.sign(dy) * WHEEL_STEP);
-    this.rotated = true;
-    this.savePlacement();
-  }
-
-  private syncCursor(): void {
-    const world = this.world;
-    const pointer = this.input.activePointer;
-    let cursor = 'default';
-    if (this.armedKind || this.armedAbility) cursor = 'crosshair';
-    else if (this.mode === 'drag' || this.mode === 'rotate') cursor = 'grabbing';
-    else if (
-      world.phase === 'prep' &&
-      !pointer.wasTouch &&
-      world.turretAt(pointer.worldX, pointer.worldY)
-    ) {
-      cursor = 'grab';
+    if (this.ended || dy === 0) return;
+    const event = pointer.event;
+    if (event instanceof WheelEvent && event.shiftKey && this.world.phase === 'prep') {
+      const hovered = this.turretUnder(pointer.worldX, pointer.worldY);
+      if (hovered) this.selected = hovered.id;
+      this.rotateSelected(Math.sign(dy) * (ROTATE_STEP / 1.5));
+      return;
     }
-    if (cursor !== this.cursor) {
-      this.cursor = cursor;
-      this.input.setDefaultCursor(cursor);
-    }
-  }
-
-  private handlePoint(turret: Turret, back: boolean): { x: number; y: number } {
-    const spec = this.world.specs[turret.kind];
-    const reach = back ? 62 : Math.min(Math.max(spec.range * 0.5, 90), 140);
-    const angle = back ? turret.angle + Math.PI : turret.angle;
-    return {
-      x: Phaser.Math.Clamp(turret.x + Math.cos(angle) * reach, 34, MAP_WIDTH - 34),
-      y: Phaser.Math.Clamp(
-        turret.y + Math.sin(angle) * reach,
-        layout.hudHeight + 34,
-        layout.bottomBarY - 34,
-      ),
-    };
+    this.mapCamera.stop();
+    this.mapCamera.zoomBy(Math.exp(-dy * 0.0015), { x: pointer.x, y: pointer.y });
   }
 
   private onDown(pointer: Phaser.Input.Pointer, over: Phaser.GameObjects.GameObject[]): void {
-    if (over.length > 0 || this.ended || this.defeat) return;
-    const world = this.world;
-    const x = pointer.worldX;
-    const y = pointer.worldY;
-    if (!this.inMap(x, y)) return;
-    if (pointer.rightButtonDown()) {
-      if (world.phase === 'prep' && !this.armedKind) {
-        const target = world.turretAt(x, y);
-        if (target) {
-          this.selected = target.id;
-          this.removeSelected();
-          return;
-        }
-      }
-      this.cancel();
+    if (over.length > 0 || this.ended || this.defeated) return;
+    this.pointers.set(pointer.id, { x: pointer.x, y: pointer.y });
+    this.mapCamera.stop();
+
+    if (this.pointers.size >= 2) {
+      if (this.gesture === 'drag' || this.gesture === 'rotate') this.savePlacement();
+      this.swipeLine.clear();
+      this.ghost = null;
+      this.gesture = 'pinch';
+      this.pinchPrev = this.pinchPoints();
       return;
     }
 
+    const world = this.world;
+    const x = pointer.worldX;
+    const y = pointer.worldY;
+    this.downAt = { x: pointer.x, y: pointer.y };
+    this.lastMove = { x: pointer.x, y: pointer.y };
+    this.lastMoveTime = this.time.now;
+    this.velocity = { x: 0, y: 0 };
+    this.downButton = pointer.button;
+    this.downTime = this.time.now;
+    this.holdFired = false;
+    this.gesture = 'pending';
+    if (pointer.button !== 0 || !this.inMap(x, y)) return;
+
     if (world.phase === 'battle') {
-      if (this.armedAbility === 'pillar') {
-        if (world.usePillar(x, y)) this.sfx.play('zap');
-        this.armedAbility = null;
-      } else if (this.armedAbility === 'airstrike') {
-        this.mode = 'swipe';
+      if (this.armedAbility === 'airstrike') {
+        this.gesture = 'swipe';
         this.swipeX = x;
         this.swipeY = y;
       }
@@ -489,93 +579,216 @@ export class GameScene extends Phaser.Scene {
     const current = world.turretById(this.selected);
     if (current) {
       const rotate = this.handlePoint(current, false);
-      if (current.kind !== 'tesla' && Math.hypot(rotate.x - x, rotate.y - y) < 40) {
-        this.mode = 'rotate';
+      const grab = Math.max(40, this.screenPx(40));
+      if (current.kind !== 'tesla' && Math.hypot(rotate.x - x, rotate.y - y) < grab) {
+        this.gesture = 'rotate';
         return;
       }
       const remove = this.handlePoint(current, true);
-      if (Math.hypot(remove.x - x, remove.y - y) < 36) {
-        world.removeTurret(current.id);
-        this.selected = -1;
-        this.sfx.play('click');
-        this.savePlacement();
+      if (Math.hypot(remove.x - x, remove.y - y) < Math.max(36, this.screenPx(36))) {
+        this.removeSelected();
+        this.gesture = 'none';
         return;
       }
     }
-    const turret = world.turretAt(x, y);
+    const turret = this.turretUnder(x, y);
     if (turret) {
       this.selected = turret.id;
       this.armedKind = null;
-      this.mode = 'drag';
+      this.gesture = 'drag';
       this.dragX = turret.x - x;
       this.dragY = turret.y - y;
-      return;
     }
-    if (this.armedKind) {
-      this.place(this.armedKind, x, y);
-      return;
-    }
-    this.selected = -1;
+  }
+
+  private pinchPoints(): [Point, Point] | null {
+    const points = [...this.pointers.values()];
+    const a = points[0];
+    const b = points[1];
+    return a && b ? [a, b] : null;
   }
 
   private onMove(pointer: Phaser.Input.Pointer): void {
     if (this.ended) return;
-    const hovering = !pointer.isDown && !pointer.wasTouch && this.mode === 'new';
-    if (!pointer.isDown && !hovering) return;
     const world = this.world;
     const x = pointer.worldX;
     const y = pointer.worldY;
-    if (this.mode === 'drag') {
+
+    if (this.pointers.has(pointer.id))
+      this.pointers.set(pointer.id, { x: pointer.x, y: pointer.y });
+
+    if (this.gesture === 'pinch') {
+      const now = this.pinchPoints();
+      if (now && this.pinchPrev) this.mapCamera.pinch(this.pinchPrev, now);
+      this.pinchPrev = now;
+      return;
+    }
+
+    const hovering = !pointer.isDown && !pointer.wasTouch;
+    if ((hovering || this.dropping) && this.armedKind && world.phase === 'prep') {
+      this.ghost = this.inMap(x, y)
+        ? {
+            kind: this.armedKind,
+            x,
+            y,
+            angle: world.defaultAngle(x, y),
+            ok: world.placementIssue(this.armedKind, x, y) === 'ok',
+          }
+        : null;
+      if (this.dropping) return;
+    }
+    if (!pointer.isDown || !this.pointers.has(pointer.id)) return;
+
+    if (this.gesture === 'pending') {
+      if (
+        Math.hypot(pointer.x - this.downAt.x, pointer.y - this.downAt.y) >
+        TAP_SLOP * renderScale()
+      ) {
+        this.gesture = 'pan';
+      }
+    }
+    if (this.gesture === 'pan') {
+      const dx = pointer.x - this.lastMove.x;
+      const dy = pointer.y - this.lastMove.y;
+      this.mapCamera.pan(dx, dy);
+      const elapsed = Math.max(1, this.time.now - this.lastMoveTime) / 1000;
+      this.velocity = { x: dx / elapsed, y: dy / elapsed };
+    } else if (this.gesture === 'drag') {
       const turret = world.turretById(this.selected);
-      if (!turret) return;
-      const tx = x + this.dragX;
-      const ty = y + this.dragY;
-      if (world.moveTurret(turret.id, tx, ty)) this.ghost = null;
-      else this.ghost = { kind: turret.kind, x: tx, y: ty, angle: turret.angle, ok: false };
-    } else if (this.mode === 'rotate') {
+      if (turret) {
+        const tx = x + this.dragX;
+        const ty = y + this.dragY;
+        if (world.moveTurret(turret.id, tx, ty)) this.ghost = null;
+        else this.ghost = { kind: turret.kind, x: tx, y: ty, angle: turret.angle, ok: false };
+      }
+    } else if (this.gesture === 'rotate') {
       const turret = world.turretById(this.selected);
-      if (!turret) return;
-      if (Math.hypot(x - turret.x, y - turret.y) > 12) {
+      if (turret && Math.hypot(x - turret.x, y - turret.y) > 12) {
         world.rotateTurret(turret.id, Math.atan2(y - turret.y, x - turret.x));
         this.rotated = true;
       }
-    } else if (this.mode === 'new' && this.armedKind) {
-      if (!this.inMap(x, y)) {
-        this.ghost = null;
-        return;
-      }
-      this.ghost = {
-        kind: this.armedKind,
-        x,
-        y,
-        angle: world.defaultAngle(x, y),
-        ok: world.placementIssue(this.armedKind, x, y) === 'ok',
-      };
-    } else if (this.mode === 'swipe') {
+    } else if (this.gesture === 'swipe') {
       this.swipeLine
         .clear()
-        .lineStyle(10, hexToInt(palette.danger), 0.5)
+        .lineStyle(Math.max(10, this.screenPx(8)), hexToInt(palette.danger), 0.5)
         .lineBetween(this.swipeX, this.swipeY, x, y);
     }
+    this.lastMove = { x: pointer.x, y: pointer.y };
+    this.lastMoveTime = this.time.now;
   }
 
   private onUp(pointer: Phaser.Input.Pointer): void {
-    const mode = this.mode;
-    this.mode = 'none';
-    const ghost = this.ghost;
-    this.ghost = null;
+    const tracked = this.pointers.delete(pointer.id);
     if (this.ended) return;
-    if (mode === 'drag' || mode === 'rotate') {
-      this.savePlacement();
-    } else if (mode === 'new') {
+    const world = this.world;
+    const x = pointer.worldX;
+    const y = pointer.worldY;
+
+    if (this.dropping) {
+      this.dropping = false;
+      const ghost = this.ghost;
+      this.ghost = null;
       if (ghost && this.armedKind) this.place(this.armedKind, ghost.x, ghost.y);
-      if (this.armedKind) this.mode = 'new';
-    } else if (mode === 'swipe') {
-      this.swipeLine.clear();
-      if (this.world.useAirstrike(this.swipeX, this.swipeY, pointer.worldX, pointer.worldY)) {
-        this.sfx.play('click');
+      return;
+    }
+    if (this.gesture === 'pinch') {
+      if (this.pointers.size < 2) {
+        this.pinchPrev = null;
+        this.gesture = this.pointers.size === 0 ? 'none' : 'pinch';
       }
+      return;
+    }
+    if (!tracked) return;
+    const gesture = this.gesture;
+    this.gesture = 'none';
+
+    if (gesture === 'pending') {
+      this.tap(x, y);
+    } else if (gesture === 'pan') {
+      if (this.time.now - this.lastMoveTime < 80)
+        this.mapCamera.fling(-this.velocity.x, -this.velocity.y);
+    } else if (gesture === 'drag') {
+      this.ghost = null;
+      this.savePlacement();
+    } else if (gesture === 'rotate') {
+      this.savePlacement();
+    } else if (gesture === 'swipe') {
+      this.swipeLine.clear();
+      if (world.useAirstrike(this.swipeX, this.swipeY, x, y)) this.sfx.play('click');
       this.armedAbility = null;
+    }
+  }
+
+  private tap(x: number, y: number): void {
+    const world = this.world;
+    if (!this.inMap(x, y)) return;
+    if (this.downButton === 2) {
+      const target = world.phase === 'prep' ? this.turretUnder(x, y) : undefined;
+      if (target) {
+        this.selected = target.id;
+        this.removeSelected();
+      } else {
+        this.cancel();
+      }
+      return;
+    }
+    if (this.downButton !== 0) return;
+    if (world.phase === 'battle') {
+      if (this.armedAbility === 'pillar') {
+        if (world.usePillar(x, y)) this.sfx.play('zap');
+        this.armedAbility = null;
+      } else if (!this.armedAbility && !this.holdFired) {
+        this.fireRocket(x, y);
+      }
+      return;
+    }
+    if (world.phase !== 'prep') return;
+    if (this.armedKind) this.place(this.armedKind, x, y);
+    else this.selected = -1;
+  }
+
+  private fireRocket(x: number, y: number): void {
+    if (this.world.fireRocket(x, y)) this.sfx.play('rocket');
+  }
+
+  private holdFire(): void {
+    const world = this.world;
+    if (this.gesture !== 'pending' || this.downButton !== 0 || this.armedAbility) return;
+    if (world.phase !== 'battle' || this.pointers.size !== 1) return;
+    if (this.time.now - this.downTime < rocket.holdDelayMs || !world.rocketReady) return;
+    const pointer = this.input.activePointer;
+    if (!pointer.isDown) return;
+    this.holdFired = true;
+    this.fireRocket(pointer.worldX, pointer.worldY);
+  }
+
+  private rocketTrails(): void {
+    const list = this.world.projectiles;
+    for (let i = 0; i < list.count; i += 1) {
+      const p = list.items[i];
+      if (!p || p.kind !== ProjectileKind.Rocket || p.delay > 0) continue;
+      this.fx.burst(p.x, p.y, 1, 25, 0xd8d4cc, 0.45, -30);
+    }
+  }
+
+  private syncCursor(): void {
+    const world = this.world;
+    const pointer = this.input.activePointer;
+    let cursor = 'default';
+    if (this.gesture === 'pan' || this.gesture === 'drag' || this.gesture === 'rotate') {
+      cursor = 'grabbing';
+    } else if (this.armedKind || this.armedAbility || world.phase === 'battle') {
+      cursor = 'crosshair';
+    } else if (
+      world.phase === 'prep' &&
+      !pointer.wasTouch &&
+      this.turretUnder(pointer.worldX, pointer.worldY)
+    ) {
+      cursor = 'grab';
+    }
+    if (cursor !== this.cursor) {
+      this.cursor = cursor;
+      this.input.setDefaultCursor(cursor);
     }
   }
 
@@ -591,6 +804,7 @@ export class GameScene extends Phaser.Scene {
     if (!turret) return;
     this.selected = turret.id;
     this.armedKind = null;
+    this.ghost = null;
     this.sfx.play('build');
     this.fx.ring(x, y, 16, 60, 0.3, hexToInt(palette.white), 0.9);
     this.savePlacement();
@@ -620,7 +834,7 @@ export class GameScene extends Phaser.Scene {
     this.savePlacement();
     this.selected = -1;
     this.armedKind = null;
-    this.mode = 'none';
+    this.gesture = 'none';
     this.ghost = null;
     world.startBattle();
     this.sfx.play('click');
@@ -637,10 +851,17 @@ export class GameScene extends Phaser.Scene {
       this.removeHandle.setVisible(false);
       return;
     }
+    const scale = Math.max(1, renderScale() / this.mapCamera.zoom);
     const rotate = this.handlePoint(turret, false);
     const remove = this.handlePoint(turret, true);
-    this.rotateHandle.setVisible(turret.kind !== 'tesla').setPosition(rotate.x, rotate.y);
-    this.removeHandle.setVisible(this.mode !== 'drag').setPosition(remove.x, remove.y);
+    this.rotateHandle
+      .setVisible(turret.kind !== 'tesla')
+      .setPosition(rotate.x, rotate.y)
+      .setScale((1.3 * scale) / UI_RATIO);
+    this.removeHandle
+      .setVisible(this.gesture !== 'drag')
+      .setPosition(remove.x, remove.y)
+      .setScale((1.35 * scale) / UI_RATIO);
   }
 
   private abilityView(kind: AbilityKind): AbilityView {
@@ -649,7 +870,7 @@ export class GameScene extends Phaser.Scene {
     return {
       unlocked,
       ready: world.abilityReady(kind),
-      cooldown: world.abilityCooldown[kind],
+      cooldown: world.abilityCooldown[kind] / gameSpeed,
       armed: this.armedAbility === kind,
       adOffer:
         kind === 'bigBang' &&
@@ -660,22 +881,22 @@ export class GameScene extends Phaser.Scene {
     };
   }
 
-  private syncHud(now: number): void {
+  private syncHud(now: number, delta: number): void {
     const world = this.world;
+    const hud = this.hud;
+    if (!hud) return;
     const { i18n } = services();
     const battle = world.phase !== 'prep';
     let status = i18n.t('hud.prep');
     if (battle) {
       status =
         this.level.win.type === 'timer'
-          ? i18n.t('hud.timer', { seconds: Math.ceil(world.timeLeft) })
+          ? i18n.t('hud.timer', { seconds: Math.ceil(world.timeLeft / gameSpeed) })
           : i18n.t('hud.wave', {
               current: Math.max(1, world.runner.index + 1),
               total: this.level.waves.length,
             });
     }
-    const hud = this.hud;
-    if (!hud) return;
     const selected = world.turretById(this.selected);
     hud.update(
       {
@@ -685,7 +906,7 @@ export class GameScene extends Phaser.Scene {
         turretLimit: world.turretLimit,
         status,
         battle,
-        speed: this.speed,
+        defeat: this.defeated,
         armedKind: this.armedKind,
         infoKind: selected?.kind ?? null,
         abilities: {
@@ -693,15 +914,19 @@ export class GameScene extends Phaser.Scene {
           pillar: this.abilityView('pillar'),
           bigBang: this.abilityView('bigBang'),
         },
+        camera: this.mapCamera.worldRect(),
       },
       now,
+      delta,
     );
 
     let hint: TranslationKey | null = null;
     if (this.hintKey && this.time.now < this.hintUntil) hint = this.hintKey;
     else if (this.armedAbility === 'airstrike') hint = 'ability.hint.airstrike';
     else if (this.armedAbility === 'pillar') hint = 'ability.hint.pillar';
-    else if (this.tutorial && world.phase === 'prep' && this.mode === 'none') {
+    else if (this.tutorial && world.phase === 'battle' && world.rocketsFired === 0) {
+      hint = 'tutorial.rocket';
+    } else if (this.tutorial && world.phase === 'prep' && this.gesture === 'none') {
       if (world.turrets.length === 0) hint = 'tutorial.place';
       else if (!this.rotated) hint = 'tutorial.rotate';
       else hint = 'tutorial.fight';
@@ -771,46 +996,17 @@ export class GameScene extends Phaser.Scene {
     const now = this.time.now;
     if (now - this.lastShakeAt < fxLimits.shakeCooldownMs) return;
     this.lastShakeAt = now;
-    const intensity = (fxLimits.shakeMaxPx * Math.min(1, strength)) / gameConfig.width;
+    const intensity = (fxLimits.shakeMaxPx * Math.min(1, strength)) / this.scale.width;
     this.cameras.main.shake(140, intensity, true);
   }
 
   private openDefeat(): void {
-    const { i18n, gameplay } = services();
-    const width = MAP_WIDTH;
-    const height = MAP_HEIGHT;
-    gameplay.stop();
+    services().gameplay.stop();
     this.armedAbility = null;
-    this.mode = 'none';
+    this.gesture = 'none';
     this.swipeLine.clear();
     this.sfx.play('lose');
-
-    const container = this.add.container(0, 0).setDepth(Depth.Overlay);
-    const dim = this.add
-      .rectangle(0, 0, width, height, 0x000000, 0.7)
-      .setOrigin(0)
-      .setInteractive();
-    const title = addLabel(this, width / 2, height * 0.34, i18n.t('defeat.title'), 60);
-    const revive = new Button(
-      this,
-      width / 2,
-      height * 0.48,
-      i18n.t('defeat.revive'),
-      () => void this.revive(),
-      { width: 520, height: 150, fontSize: 38, color: 0x7d4bc4 },
-    );
-    const giveUp = new Button(
-      this,
-      width / 2,
-      height * 0.62,
-      i18n.t('defeat.giveUp'),
-      () => {
-        if (!this.busy) this.finish(false);
-      },
-      { width: 400, height: 100, fontSize: 36, color: 0x3a3f58 },
-    );
-    container.add([dim, title, revive, giveUp]);
-    this.defeat = container;
+    this.defeated = true;
   }
 
   private async revive(): Promise<void> {
@@ -821,8 +1017,7 @@ export class GameScene extends Phaser.Scene {
       const rewarded = await ads.showRewarded();
       if (!rewarded || this.ended) return;
       if (!this.world.revive()) return;
-      this.defeat?.destroy();
-      this.defeat = null;
+      this.defeated = false;
       gameplay.start();
     } finally {
       this.busy = false;
@@ -858,7 +1053,7 @@ export class GameScene extends Phaser.Scene {
     });
     this.armedAbility = null;
     if (won) this.sfx.play('win');
-    else if (!this.defeat) this.sfx.play('lose');
+    else if (!this.defeated) this.sfx.play('lose');
 
     const result: ResultData = {
       levelId: id,

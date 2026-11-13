@@ -1,12 +1,12 @@
 import Phaser from 'phaser';
 import type { GameI18n } from '../../i18n';
-import { ATLAS_KEY, Frame, hexToInt, palette, turretColors, turretFrame } from '../art';
+import { Frame, hexToInt, palette, turretColors, turretFrame, uiImage } from '../art';
 import { upgradeTree, type TreeNode } from '../balance';
 import { SceneKey } from '../keys';
 import { services } from '../services';
 import { nodeAvailable, nodeCost, nodeLevel, purchaseNode, sanitizeTree } from '../sim/tree';
 import { Button } from '../ui/button';
-import { restartOnResize } from '../ui/screen';
+import { currentScreen, fitUiCamera, renderScale, restartOnResize } from '../ui/screen';
 import { addLabel } from '../ui/text';
 
 const RING = 165;
@@ -86,6 +86,7 @@ function nodeGlyph(node: TreeNode): string {
   if (effect.type === 'limit') return '+';
   if (effect.type === 'baseHp') return '♥';
   if (effect.type === 'reward') return '◆';
+  if (effect.type === 'rocket') return { damage: '↗', rate: '»', radius: '◎' }[effect.stat];
   return '';
 }
 
@@ -116,6 +117,7 @@ export function describeNode(i18n: GameI18n, node: TreeNode, level: number): str
   if (effect.type === 'limit')
     return i18n.t('tree.limit', { count: Math.round(node.perLevel * shown) });
   if (effect.type === 'baseHp') return i18n.t('tree.baseHp', { percent });
+  if (effect.type === 'rocket') return i18n.t(`tree.rocket.${effect.stat}`, { percent });
   return i18n.t('tree.reward', { percent });
 }
 
@@ -144,7 +146,9 @@ export class TreeScene extends Phaser.Scene {
 
   create(): void {
     const { i18n, save, gameplay } = services();
-    const { width, height } = this.scale;
+    const camera = fitUiCamera(this);
+    const { width, height } = currentScreen();
+    const scale = renderScale();
     gameplay.stop();
     this.cameras.main.fadeIn(200);
     restartOnResize(this);
@@ -154,9 +158,15 @@ export class TreeScene extends Phaser.Scene {
     const placed = layoutTree();
     const reach =
       Math.max(...placed.map((item) => Math.max(Math.abs(item.x), Math.abs(item.y)))) + 140;
-    const camera = this.cameras.main;
-    camera.setBounds(-reach, -reach - 120, reach * 2, reach * 2 + 120 + PANEL_HEIGHT);
-    camera.centerOn(0, 60);
+    const clampScroll = (x: number, y: number): void => {
+      const minX = -reach;
+      const maxX = reach - width;
+      const minY = -reach - 120;
+      const maxY = reach + PANEL_HEIGHT - height;
+      camera.scrollX = minX > maxX ? -width / 2 : Math.min(maxX, Math.max(minX, x));
+      camera.scrollY = minY > maxY ? 60 - height / 2 : Math.min(maxY, Math.max(minY, y));
+    };
+    clampScroll(-width / 2, 60 - height / 2);
 
     this.edges = this.add.graphics();
     this.selection = this.add.circle(0, 0, NODE_RADIUS + 9).setStrokeStyle(6, 0xffffff, 1);
@@ -169,12 +179,10 @@ export class TreeScene extends Phaser.Scene {
       const parts: NodeView['parts'] = [];
       const effect = item.node.effect;
       if (effect.type === 'unlockTurret') {
-        parts.push(this.add.image(item.x, item.y - 4, ATLAS_KEY, turretFrame(effect.turret)));
+        parts.push(uiImage(this, item.x, item.y - 4, turretFrame(effect.turret)));
       } else if (effect.type === 'core') {
-        parts.push(this.add.image(item.x, item.y - 2, ATLAS_KEY, Frame.TurretBase));
-        parts.push(
-          this.add.image(item.x, item.y - 2, ATLAS_KEY, turretFrame('ballista')).setAngle(-90),
-        );
+        parts.push(uiImage(this, item.x, item.y - 2, Frame.TurretBase));
+        parts.push(uiImage(this, item.x, item.y - 2, turretFrame('ballista')).setAngle(-90));
       } else {
         const glyph = addLabel(this, item.x, item.y - 8, nodeGlyph(item.node), 34);
         glyph.setStroke(palette.outline, 5);
@@ -207,8 +215,7 @@ export class TreeScene extends Phaser.Scene {
     )
       .setScrollFactor(0)
       .setDepth(UI);
-    this.add
-      .image(width - 150, 48, ATLAS_KEY, Frame.Crystal)
+    uiImage(this, width - 150, 48, Frame.Crystal)
       .setScrollFactor(0)
       .setDepth(UI);
     this.currency = addLabel(this, width - 126, 48, '', 32, palette.crystal)
@@ -248,8 +255,7 @@ export class TreeScene extends Phaser.Scene {
       const dx = pointer.x - pointer.prevPosition.x;
       const dy = pointer.y - pointer.prevPosition.y;
       this.moved += Math.abs(dx) + Math.abs(dy);
-      camera.scrollX -= dx;
-      camera.scrollY -= dy;
+      clampScroll(camera.scrollX - dx / scale, camera.scrollY - dy / scale);
     });
     this.input.on(Phaser.Input.Events.POINTER_UP, (pointer: Phaser.Input.Pointer) => {
       const wasDragging = this.dragging;

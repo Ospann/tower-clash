@@ -3,8 +3,8 @@
   "name": "level.01",
   "chapter": 1,
   "grid": {
-    "cols": 36,
-    "rows": 64,
+    "cols": 72,
+    "rows": 90,
     "cell": 20
   },
   "tiles": "meadow",
@@ -15,69 +15,79 @@
         "kind": "rect",
         "x": 0,
         "y": 0,
-        "w": 80,
-        "h": 1280
+        "w": 240,
+        "h": 1800
       }
     },
     {
       "type": "cliff",
       "shape": {
         "kind": "rect",
-        "x": 280,
+        "x": 480,
         "y": 0,
-        "w": 440,
-        "h": 360
+        "w": 960,
+        "h": 600
       }
     },
     {
       "type": "cliff",
       "shape": {
         "kind": "rect",
-        "x": 640,
-        "y": 360,
-        "w": 80,
-        "h": 920
+        "x": 1160,
+        "y": 600,
+        "w": 280,
+        "h": 1040
       }
     },
     {
       "type": "cliff",
       "shape": {
         "kind": "rect",
-        "x": 80,
-        "y": 560,
-        "w": 360,
-        "h": 720
+        "x": 240,
+        "y": 840,
+        "w": 680,
+        "h": 960
       }
     },
     {
       "type": "cliff",
       "shape": {
         "kind": "rect",
-        "x": 440,
-        "y": 1120,
-        "w": 200,
+        "x": 1200,
+        "y": 1640,
+        "w": 240,
         "h": 160
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 920,
+        "y": 1760,
+        "w": 280,
+        "h": 40
       }
     }
   ],
   "entries": [
     {
       "id": "a",
-      "x": 180.0,
+      "x": 360.0,
       "y": 0,
-      "radius": 90.0
+      "radius": 110.0
     }
   ],
   "zones": [
     {
-      "x": 440,
-      "y": 1040,
-      "w": 200,
-      "h": 80
+      "x": 920,
+      "y": 1640,
+      "w": 280,
+      "h": 120
     }
   ],
   "baseHp": 20,
-  "turretLimit": 4,
+  "turretLimit": 5,
   "win": {
     "type": "waves"
   },
@@ -90,18 +100,7 @@
       "groups": [
         {
           "goblin": "grunt",
-          "count": 7,
-          "duration": 8,
-          "entry": "a",
-          "delay": 0
-        }
-      ]
-    },
-    {
-      "groups": [
-        {
-          "goblin": "grunt",
-          "count": 14,
+          "count": 15,
           "duration": 10,
           "entry": "a",
           "delay": 0
@@ -112,10 +111,28 @@
       "groups": [
         {
           "goblin": "grunt",
-          "count": 24,
+          "count": 30,
           "duration": 12,
           "entry": "a",
           "delay": 0
+        }
+      ]
+    },
+    {
+      "groups": [
+        {
+          "goblin": "grunt",
+          "count": 48,
+          "duration": 14,
+          "entry": "a",
+          "delay": 0
+        },
+        {
+          "goblin": "grunt",
+          "count": 18,
+          "duration": 6,
+          "entry": "a",
+          "delay": 9
         }
       ]
     }

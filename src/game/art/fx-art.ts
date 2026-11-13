@@ -46,6 +46,34 @@ export function addFxFrames(atlas: AtlasBuilder): void {
     ctx.fillStyle = 'rgba(10, 16, 10, 0.32)';
     ctx.fill();
   });
+  atlas.add(Frame.Rocket, 34, 16, (ctx) => {
+    ctx.beginPath();
+    ctx.moveTo(4, 3);
+    ctx.lineTo(0, 0);
+    ctx.lineTo(9, 4);
+    ctx.lineTo(9, 12);
+    ctx.lineTo(0, 16);
+    ctx.lineTo(4, 13);
+    ctx.closePath();
+    ctx.fillStyle = palette.danger;
+    ctx.fill();
+    ctx.beginPath();
+    ctx.roundRect(6, 4, 20, 8, 3);
+    ctx.fillStyle = palette.stoneLight;
+    ctx.fill();
+    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = palette.outline;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(26, 4);
+    ctx.quadraticCurveTo(34, 8, 26, 12);
+    ctx.closePath();
+    ctx.fillStyle = palette.danger;
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = palette.fireHot;
+    ctx.fillRect(0, 6, 4, 4);
+  });
   atlas.add(Frame.Dot, 16, 16, (ctx) => {
     const g = ctx.createRadialGradient(8, 8, 0, 8, 8, 8);
     g.addColorStop(0, 'rgba(255,255,255,1)');

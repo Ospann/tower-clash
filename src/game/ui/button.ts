@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { FONT_FAMILY } from '../keys';
+import { renderScale } from './screen';
 
 export interface ButtonOptions {
   width?: number;
@@ -41,6 +42,7 @@ export class Button extends Phaser.GameObjects.Container {
         color: options.textColor ?? '#ffffff',
         fontStyle: 'bold',
         align: 'center',
+        resolution: renderScale(),
       })
       .setOrigin(0.5);
 

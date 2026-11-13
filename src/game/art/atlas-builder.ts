@@ -18,7 +18,12 @@ export class AtlasBuilder {
   private cursorY = PADDING;
   private rowHeight = 0;
 
-  constructor(width: number, height: number = width) {
+  constructor(
+    width: number,
+    height: number = width,
+    private readonly ratio = 1,
+    private readonly only: ReadonlySet<string> | null = null,
+  ) {
     this.canvas = document.createElement('canvas');
     this.canvas.width = width;
     this.canvas.height = height;
@@ -28,8 +33,11 @@ export class AtlasBuilder {
   }
 
   add(name: string, width: number, height: number, draw: DrawFn): void {
-    const w = Math.ceil(width);
-    const h = Math.ceil(height);
+    if (this.only && !this.only.has(name)) return;
+    const logicalW = Math.ceil(width);
+    const logicalH = Math.ceil(height);
+    const w = logicalW * this.ratio;
+    const h = logicalH * this.ratio;
     if (this.cursorX + w + PADDING > this.canvas.width) {
       this.cursorX = PADDING;
       this.cursorY += this.rowHeight + PADDING;
@@ -44,9 +52,10 @@ export class AtlasBuilder {
     ctx.beginPath();
     ctx.rect(0, 0, w, h);
     ctx.clip();
+    ctx.scale(this.ratio, this.ratio);
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';
-    draw(ctx, w, h);
+    draw(ctx, logicalW, logicalH);
     ctx.restore();
     this.frames.push({ name, x: this.cursorX, y: this.cursorY, w, h });
     this.cursorX += w + PADDING;

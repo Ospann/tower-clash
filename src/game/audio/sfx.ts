@@ -13,6 +13,7 @@ export const SFX_NAMES = [
   'build',
   'win',
   'lose',
+  'rocket',
 ] as const;
 export type SfxName = (typeof SFX_NAMES)[number];
 
@@ -100,6 +101,15 @@ const specs: Readonly<Record<SfxName, SfxSpec>> = {
     pitchJitter: 0.15,
     render: (t, s, noise) =>
       Math.sin(sweep(t, 130, 58, s)) * Math.exp(-t * 26) + noise() * 0.5 * Math.exp(-t * 90),
+  },
+  rocket: {
+    category: 'shot',
+    volume: 0.35,
+    seconds: 0.22,
+    pitchJitter: 0.15,
+    render: (t, s, noise) =>
+      noise() * Math.sin((Math.PI * t) / s) * 0.5 +
+      Math.sin(sweep(t, 700, 220, s)) * 0.25 * Math.exp(-t * 8),
   },
   click: {
     category: 'ui',

@@ -1,11 +1,12 @@
 import Phaser from 'phaser';
 import { translateKey } from '../../i18n';
-import { ATLAS_KEY, Frame, hexToInt, palette } from '../art';
+import { Frame, hexToInt, palette, uiImage } from '../art';
 import { SceneKey } from '../keys';
 import { chapters, isUnlocked, levels } from '../levels';
 import { services } from '../services';
+import { addBackdrop } from '../ui/backdrop';
 import { Button } from '../ui/button';
-import { isLandscape, restartOnResize } from '../ui/screen';
+import { currentScreen, fitUiCamera, isLandscape, restartOnResize } from '../ui/screen';
 import { addLabel } from '../ui/text';
 import type { GameSceneData } from './game';
 
@@ -18,14 +19,16 @@ export class LevelSelectScene extends Phaser.Scene {
 
   create(): void {
     const { i18n, save, gameplay } = services();
-    const { width, height } = this.scale;
+    fitUiCamera(this);
+    const { width, height } = currentScreen();
+    addBackdrop(this, 0.72);
     gameplay.stop();
     this.cameras.main.fadeIn(200);
     restartOnResize(this);
     const columns = isLandscape() ? 4 : 2;
 
     addLabel(this, width / 2, 60, i18n.t('levels.title'), 46).setFontStyle('bold');
-    this.add.image(width / 2 - 46, 116, ATLAS_KEY, Frame.Crystal).setScale(0.9);
+    uiImage(this, width / 2 - 46, 116, Frame.Crystal, 0.9);
     addLabel(this, width / 2 - 20, 116, String(save.data.currency), 32, palette.crystal).setOrigin(
       0,
       0.5,
@@ -67,13 +70,11 @@ export class LevelSelectScene extends Phaser.Scene {
         if (unlocked) {
           for (let s = 0; s < 3; s += 1) {
             card.add(
-              this.add
-                .image(-22 + s * 56, 26, ATLAS_KEY, s < stars ? Frame.Star : Frame.StarEmpty)
-                .setScale(0.8),
+              uiImage(this, -22 + s * 56, 26, s < stars ? Frame.Star : Frame.StarEmpty, 0.8),
             );
           }
         } else {
-          card.add(this.add.image(34, 26, ATLAS_KEY, Frame.Lock).setScale(0.8));
+          card.add(uiImage(this, 34, 26, Frame.Lock, 0.8));
           card.setEnabled(false);
         }
       });
