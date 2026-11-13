@@ -30,7 +30,7 @@ import { services } from '../services';
 import { rewardFor, starsFor } from '../sim/economy';
 import { FX_STRIDE, FxKind, type FxEvents } from '../sim/events';
 import { ProjectileKind } from '../sim/projectiles';
-import { neutralLoadout, unlockedTurrets, type AbilityKind } from '../sim/loadout';
+import { neutralLoadout, turretCap, unlockedTurrets, type AbilityKind } from '../sim/loadout';
 import { loadoutFrom, sanitizeTree } from '../sim/tree';
 import type { Turret } from '../sim/turrets';
 import { World } from '../sim/world';
@@ -864,6 +864,22 @@ export class GameScene extends Phaser.Scene {
       .setScale((1.35 * scale) / UI_RATIO);
   }
 
+  private turretCounts(): Record<TurretKind, { placed: number; cap: number }> {
+    const world = this.world;
+    const entry = (kind: TurretKind): { placed: number; cap: number } => ({
+      placed: world.turretCount(kind),
+      cap: turretCap(world.loadout, kind),
+    });
+    return {
+      ballista: entry('ballista'),
+      mortar: entry('mortar'),
+      gatling: entry('gatling'),
+      tar: entry('tar'),
+      tesla: entry('tesla'),
+      beam: entry('beam'),
+    };
+  }
+
   private abilityView(kind: AbilityKind): AbilityView {
     const world = this.world;
     const unlocked = world.loadout.abilities[kind].unlocked;
@@ -899,6 +915,7 @@ export class GameScene extends Phaser.Scene {
         maxHp: world.baseMaxHp,
         turrets: world.turrets.length,
         turretLimit: world.turretLimit,
+        counts: this.turretCounts(),
         goblins: timed ? world.horde.count : world.goblinsLeft,
         status,
         battle,

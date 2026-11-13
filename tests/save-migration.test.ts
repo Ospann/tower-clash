@@ -47,7 +47,16 @@ describe('save migration', () => {
       soundEnabled: true,
       language: 'tr',
     };
-    expect(migrate({ v: 3, data: current }, saveSchema)).toEqual(current);
+    expect(migrate({ v: 4, data: current }, saveSchema)).toEqual(current);
+  });
+
+  it('refunds the removed turret limit node', () => {
+    const data = migrate(
+      { v: 3, data: { currency: 5, tree: { limit: 2, baseHp: 1 }, stars: {} } },
+      saveSchema,
+    );
+    expect(data.tree).toEqual({ baseHp: 1 });
+    expect(data.currency).toBe(5 + 30 + 60);
   });
 
   it('refuses a save from a newer version', () => {

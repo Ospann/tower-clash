@@ -67,6 +67,7 @@ export interface HudView {
   maxHp: number;
   turrets: number;
   turretLimit: number;
+  counts: Record<TurretKind, { placed: number; cap: number }>;
   goblins: number;
   status: string;
   battle: boolean;
@@ -108,6 +109,7 @@ export class Hud {
   private readonly fightButton: Button;
   private readonly paletteButtons = new Map<TurretKind, Button>();
   private readonly paletteBaseY = new Map<TurretKind, number>();
+  private readonly paletteCounts = new Map<TurretKind, Phaser.GameObjects.Text>();
   private readonly abilityButtons = new Map<AbilityKind, AbilityButton>();
   private readonly hintBack: Phaser.GameObjects.Rectangle;
   private readonly hintText: Phaser.GameObjects.Text;
@@ -223,6 +225,12 @@ export class Hud {
           ),
         ]);
       }
+      const count = this.landscape
+        ? addLabel(scene, cell / 2 - 26, -52, '', 24, palette.crystal)
+        : addLabel(scene, 0, 38, '', 22, palette.crystal);
+      count.setStroke(palette.outline, 5).setFontStyle('bold');
+      button.add(count);
+      this.paletteCounts.set(kind, count);
       this.bindPalette(button, kind, cy);
       this.prepGroup.add(button);
     });
@@ -353,7 +361,14 @@ export class Hud {
     if (!view.battle) {
       for (const [kind, button] of this.paletteButtons) {
         const armed = view.armedKind === kind;
-        button.setAlpha(view.armedKind === null || armed ? 1 : 0.6);
+        const { placed, cap } = view.counts[kind];
+        const full = placed >= cap;
+        const count = this.paletteCounts.get(kind);
+        const label = `${placed}/${cap}`;
+        if (count && count.text !== label) {
+          count.setText(label).setColor(full ? palette.danger : palette.crystal);
+        }
+        button.setAlpha(armed ? 1 : full ? 0.45 : view.armedKind === null ? 1 : 0.6);
         button.y = (this.paletteBaseY.get(kind) ?? button.y) - (armed ? 8 : 0);
       }
       const canFight = view.turrets > 0;

@@ -30,6 +30,10 @@ export function nodeAvailable(levels: TreeLevels, id: string): boolean {
   return node.parent === null || nodeLevel(levels, node.parent) > 0;
 }
 
+export function nodeVisible(levels: TreeLevels, id: string): boolean {
+  return nodeLevel(levels, id) > 0 || nodeAvailable(levels, id);
+}
+
 export interface Purchase {
   currency: number;
   level: number;
@@ -68,7 +72,7 @@ export function loadoutFrom(levels: TreeLevels): Loadout {
     else if (effect.type === 'ability') {
       if (effect.stat === 'cooldown') loadout.abilities[effect.ability].cooldown -= bonus;
       else loadout.abilities[effect.ability].power += bonus;
-    } else if (effect.type === 'limit') loadout.turretLimitBonus += Math.round(bonus);
+    } else if (effect.type === 'count') loadout.turrets[effect.turret].count += Math.round(bonus);
     else if (effect.type === 'baseHp') loadout.baseHp += bonus;
     else if (effect.type === 'reward') loadout.reward += bonus;
     else if (effect.type === 'rocket') loadout.rocket[effect.stat] += bonus;

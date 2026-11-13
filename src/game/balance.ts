@@ -307,7 +307,7 @@ export type TreeEffect =
   | { type: 'turret'; turret: TurretKind; stat: TurretStat }
   | { type: 'unlockAbility'; ability: AbilityId }
   | { type: 'ability'; ability: AbilityId; stat: AbilityStat }
-  | { type: 'limit' }
+  | { type: 'count'; turret: TurretKind }
   | { type: 'baseHp' }
   | { type: 'reward' }
   | { type: 'rocket'; stat: RocketStat };
@@ -330,6 +330,17 @@ const statNodes: Readonly<
   range: { maxLevel: 3, cost: 14, growth: 1.8, perLevel: 0.07 },
   arc: { maxLevel: 3, cost: 12, growth: 1.8, perLevel: 0.15 },
   special: { maxLevel: 3, cost: 22, growth: 1.9, perLevel: 0.1 },
+};
+
+export const turretCounts: Readonly<
+  Record<TurretKind, { base: number; maxLevel: number; cost: number; growth: number }>
+> = {
+  ballista: { base: 1, maxLevel: 7, cost: 8, growth: 1.55 },
+  mortar: { base: 1, maxLevel: 4, cost: 24, growth: 1.75 },
+  gatling: { base: 1, maxLevel: 4, cost: 40, growth: 1.75 },
+  tar: { base: 1, maxLevel: 3, cost: 60, growth: 1.8 },
+  tesla: { base: 1, maxLevel: 3, cost: 90, growth: 1.8 },
+  beam: { base: 1, maxLevel: 2, cost: 140, growth: 1.9 },
 };
 
 const turretBranches: readonly {
@@ -401,15 +412,6 @@ function buildTree(): TreeNode[] {
       perLevel: 0,
     },
     {
-      id: 'limit',
-      parent: 'core',
-      effect: { type: 'limit' },
-      maxLevel: 6,
-      baseCost: 30,
-      costGrowth: 2,
-      perLevel: 1,
-    },
-    {
       id: 'baseHp',
       parent: 'core',
       effect: { type: 'baseHp' },
@@ -470,6 +472,16 @@ function buildTree(): TreeNode[] {
       });
       anchor = `${turret}.unlock`;
     }
+    const count = turretCounts[turret];
+    nodes.push({
+      id: `${turret}.count`,
+      parent: anchor,
+      effect: { type: 'count', turret },
+      maxLevel: count.maxLevel,
+      baseCost: count.cost,
+      costGrowth: count.growth,
+      perLevel: 1,
+    });
     branch.stats.forEach((stat, index) => {
       const spec = statNodes[stat];
       const previous = branch.stats[index - 1];

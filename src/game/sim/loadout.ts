@@ -1,4 +1,10 @@
-import { ABILITY_IDS, TURRET_KINDS, type AbilityId, type TurretKind } from '../balance';
+import {
+  ABILITY_IDS,
+  TURRET_KINDS,
+  turretCounts,
+  type AbilityId,
+  type TurretKind,
+} from '../balance';
 
 export interface TurretMods {
   unlocked: boolean;
@@ -7,6 +13,7 @@ export interface TurretMods {
   range: number;
   arc: number;
   special: number;
+  count: number;
 }
 
 export const ABILITY_KINDS = ABILITY_IDS;
@@ -21,36 +28,44 @@ export interface AbilityMods {
 export interface Loadout {
   turrets: Record<TurretKind, TurretMods>;
   abilities: Record<AbilityKind, AbilityMods>;
-  turretLimitBonus: number;
   baseHp: number;
   reward: number;
   rocket: { damage: number; rate: number; radius: number };
 }
 
-function turret(unlocked: boolean): TurretMods {
-  return { unlocked, damage: 1, rate: 1, range: 1, arc: 1, special: 1 };
+function turret(kind: TurretKind, unlocked: boolean, open: boolean): TurretMods {
+  return {
+    unlocked,
+    damage: 1,
+    rate: 1,
+    range: 1,
+    arc: 1,
+    special: 1,
+    count: open ? OPEN_COUNT : turretCounts[kind].base,
+  };
 }
 
 function ability(unlocked: boolean): AbilityMods {
   return { unlocked, cooldown: 1, power: 1 };
 }
 
+const OPEN_COUNT = 99;
+
 export function neutralLoadout(unlockAll = true): Loadout {
   return {
     turrets: {
-      ballista: turret(true),
-      mortar: turret(unlockAll),
-      gatling: turret(unlockAll),
-      tar: turret(unlockAll),
-      tesla: turret(unlockAll),
-      beam: turret(unlockAll),
+      ballista: turret('ballista', true, unlockAll),
+      mortar: turret('mortar', unlockAll, unlockAll),
+      gatling: turret('gatling', unlockAll, unlockAll),
+      tar: turret('tar', unlockAll, unlockAll),
+      tesla: turret('tesla', unlockAll, unlockAll),
+      beam: turret('beam', unlockAll, unlockAll),
     },
     abilities: {
       airstrike: ability(unlockAll),
       pillar: ability(unlockAll),
       bigBang: ability(unlockAll),
     },
-    turretLimitBonus: 0,
     baseHp: 1,
     reward: 1,
     rocket: { damage: 1, rate: 1, radius: 1 },
@@ -59,4 +74,9 @@ export function neutralLoadout(unlockAll = true): Loadout {
 
 export function unlockedTurrets(loadout: Loadout): TurretKind[] {
   return TURRET_KINDS.filter((kind) => loadout.turrets[kind].unlocked);
+}
+
+export function turretCap(loadout: Loadout, kind: TurretKind): number {
+  const mods = loadout.turrets[kind];
+  return mods.unlocked ? mods.count : 0;
 }

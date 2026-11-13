@@ -1,6 +1,6 @@
 import { upgradeTree, type TurretKind } from '../../src/game/balance';
 import type { LevelData } from '../../src/game/levels/level-types';
-import { unlockedTurrets, type Loadout } from '../../src/game/sim/loadout';
+import { turretCap, unlockedTurrets, type Loadout } from '../../src/game/sim/loadout';
 import { loadoutFrom } from '../../src/game/sim/tree';
 import { inSector } from '../../src/game/sim/turrets';
 import { World } from '../../src/game/sim/world';
@@ -59,7 +59,9 @@ export function place(world: World): void {
   const centerY = (c: number): number => (Math.floor(c / map.cols) + 0.5) * map.cell;
 
   for (let placed = 0; placed < world.turretLimit; placed += 1) {
-    const kind = order[placed % order.length] ?? 'ballista';
+    const open = order.filter((kind) => world.turretCount(kind) < turretCap(world.loadout, kind));
+    const kind = open[placed % Math.max(1, open.length)];
+    if (!kind) break;
     const spec = world.specs[kind];
     const reach = spec.range * 0.85;
     let best = { score: 0, x: 0, y: 0, sx: 0, sy: 0 };

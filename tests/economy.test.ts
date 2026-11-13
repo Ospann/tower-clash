@@ -7,6 +7,7 @@ import {
   nodeAvailable,
   nodeCost,
   nodeLevel,
+  nodeVisible,
   purchaseNode,
   sanitizeTree,
   treeNode,
@@ -118,7 +119,8 @@ describe('upgrade tree', () => {
       'mortar.unlock': 1,
       'mortar.damage': 2,
       'ballista.rate': 3,
-      limit: 2,
+      'ballista.count': 2,
+      'mortar.count': 1,
       baseHp: 4,
       reward: 1,
       'airstrike.unlock': 1,
@@ -132,12 +134,22 @@ describe('upgrade tree', () => {
     expect(loadout.turrets.ballista.rate).toBeCloseTo(
       1 + 3 * (treeNode('ballista.rate')?.perLevel ?? 0),
     );
-    expect(loadout.turretLimitBonus).toBe(2);
+    expect(loadout.turrets.ballista.count).toBe(3);
+    expect(loadout.turrets.mortar.count).toBe(2);
+    expect(loadout.turrets.gatling.unlocked).toBe(false);
     expect(loadout.baseHp).toBeGreaterThan(1);
     expect(loadout.reward).toBeGreaterThan(1);
     expect(loadout.abilities.airstrike.unlocked).toBe(true);
     expect(loadout.abilities.airstrike.cooldown).toBeLessThan(1);
     expect(loadout.abilities.airstrike.power).toBeGreaterThan(1);
+  });
+
+  it('reveals only purchased nodes and their children', () => {
+    expect(nodeVisible({}, 'ballista.count')).toBe(true);
+    expect(nodeVisible({}, 'mortar.unlock')).toBe(true);
+    expect(nodeVisible({}, 'mortar.count')).toBe(false);
+    expect(nodeVisible({}, 'gatling.unlock')).toBe(false);
+    expect(nodeVisible({ 'mortar.unlock': 1 }, 'mortar.count')).toBe(true);
   });
 
   it('clamps and cleans stored levels', () => {

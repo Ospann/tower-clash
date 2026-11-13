@@ -20,7 +20,7 @@ import { FxEvents, FxKind } from './events';
 import { FlowField } from './flow-field';
 import { GridMap } from './grid-map';
 import { Horde } from './horde';
-import { neutralLoadout, type AbilityKind, type Loadout } from './loadout';
+import { neutralLoadout, turretCap, type AbilityKind, type Loadout } from './loadout';
 import {
   ProjectileKind,
   Projectiles,
@@ -136,7 +136,10 @@ export class World {
     this.runner = new WaveRunner(level);
     this.baseMaxHp = Math.round(level.baseHp * this.loadout.baseHp);
     this.baseHp = this.baseMaxHp;
-    this.turretLimit = level.turretLimit + this.loadout.turretLimitBonus;
+    this.turretLimit = Math.min(
+      level.turretLimit,
+      TURRET_KINDS.reduce((sum, kind) => sum + turretCap(this.loadout, kind), 0),
+    );
     this.specs = {
       ballista: turretSpec('ballista', this.loadout.turrets.ballista),
       mortar: turretSpec('mortar', this.loadout.turrets.mortar),
@@ -205,9 +208,18 @@ export class World {
     return i;
   }
 
+  turretCount(kind: TurretKind): number {
+    let count = 0;
+    for (const turret of this.turrets) if (turret.kind === kind) count += 1;
+    return count;
+  }
+
   placementIssue(kind: TurretKind, x: number, y: number, ignoreId = -1): PlacementIssue {
     if (!this.loadout.turrets[kind].unlocked) return 'locked';
-    if (ignoreId < 0 && this.turrets.length >= this.turretLimit) return 'limit';
+    if (ignoreId < 0) {
+      if (this.turrets.length >= this.turretLimit) return 'limit';
+      if (this.turretCount(kind) >= turretCap(this.loadout, kind)) return 'limit';
+    }
     const r = turretRules.baseRadius;
     if (x < r || x > this.map.width - r) return 'blocked';
     if (y < r || y > this.map.height - r) return 'blocked';

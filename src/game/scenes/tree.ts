@@ -4,7 +4,14 @@ import { Frame, hexToInt, palette, turretColors, turretFrame, uiImage } from '..
 import { upgradeTree, type TreeNode } from '../balance';
 import { SceneKey } from '../keys';
 import { services } from '../services';
-import { nodeAvailable, nodeCost, nodeLevel, purchaseNode, sanitizeTree } from '../sim/tree';
+import {
+  nodeAvailable,
+  nodeCost,
+  nodeLevel,
+  nodeVisible,
+  purchaseNode,
+  sanitizeTree,
+} from '../sim/tree';
 import { Button } from '../ui/button';
 import { currentScreen, fitUiCamera, renderScale, restartOnResize } from '../ui/screen';
 import { addLabel } from '../ui/text';
@@ -68,7 +75,7 @@ function layoutTree(): Placed[] {
 
 function nodeColor(node: TreeNode): number {
   const effect = node.effect;
-  if (effect.type === 'unlockTurret' || effect.type === 'turret') {
+  if (effect.type === 'unlockTurret' || effect.type === 'turret' || effect.type === 'count') {
     return hexToInt(turretColors[effect.turret].main);
   }
   if (effect.type === 'unlockAbility' || effect.type === 'ability') return 0xc0562b;
@@ -83,7 +90,7 @@ function nodeGlyph(node: TreeNode): string {
   }
   if (effect.type === 'ability') return effect.stat === 'cooldown' ? '⏱' : '✦';
   if (effect.type === 'unlockAbility') return '✹';
-  if (effect.type === 'limit') return '+';
+  if (effect.type === 'count') return '+1';
   if (effect.type === 'baseHp') return '♥';
   if (effect.type === 'reward') return '◆';
   if (effect.type === 'rocket') return { damage: '↗', rate: '»', radius: '◎' }[effect.stat];
@@ -114,8 +121,12 @@ export function describeNode(i18n: GameI18n, node: TreeNode, level: number): str
       percent,
     });
   }
-  if (effect.type === 'limit')
-    return i18n.t('tree.limit', { count: Math.round(node.perLevel * shown) });
+  if (effect.type === 'count') {
+    return i18n.t('tree.count', {
+      name: i18n.t(`turret.${effect.turret}`),
+      count: Math.round(node.perLevel * shown),
+    });
+  }
   if (effect.type === 'baseHp') return i18n.t('tree.baseHp', { percent });
   if (effect.type === 'rocket') return i18n.t(`tree.rocket.${effect.stat}`, { percent });
   return i18n.t('tree.reward', { percent });
@@ -263,6 +274,7 @@ export class TreeScene extends Phaser.Scene {
       if (!wasDragging || this.moved > 14) return;
       const point = camera.getWorldPoint(pointer.x, pointer.y);
       for (const view of this.views) {
+        if (!view.circle.visible) continue;
         if (Math.hypot(view.placed.x - point.x, view.placed.y - point.y) <= NODE_RADIUS + 8) {
           this.selected = view.placed.node.id;
           this.render();
@@ -301,6 +313,11 @@ export class TreeScene extends Phaser.Scene {
       const { node, x, y } = view.placed;
       const level = nodeLevel(levels, node.id);
       const available = nodeAvailable(levels, node.id);
+      const visible = nodeVisible(levels, node.id);
+      view.circle.setVisible(visible);
+      view.level.setVisible(visible);
+      for (const part of view.parts) part.setVisible(visible);
+      if (!visible) continue;
       const parent = node.parent === null ? undefined : positions.get(node.parent);
       if (parent) {
         g.lineStyle(6, level > 0 ? hexToInt(palette.gold) : 0x55606a, available ? 0.9 : 0.4);

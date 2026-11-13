@@ -68,7 +68,7 @@
   "tree.special.beam": "beam width",
   "tree.ability.cooldown": "{name}: recharge −{percent}%",
   "tree.ability.power": "{name}: power +{percent}%",
-  "tree.limit": "Turret limit +{count}",
+  "tree.count": "{name}: +{count} to build",
   "tree.baseHp": "Fortress strength +{percent}%",
   "tree.reward": "Run reward +{percent}%",
   "tutorial.place": "Pick a turret below, then tap the map",

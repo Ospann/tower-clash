@@ -163,7 +163,7 @@
     }
   ],
   "baseHp": 60,
-  "turretLimit": 11,
+  "turretLimit": 17,
   "win": {
     "type": "waves"
   },

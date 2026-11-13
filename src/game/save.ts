@@ -19,8 +19,10 @@ export interface GameSave extends Record<string, unknown> {
   language: Language | null;
 }
 
+const LEGACY_LIMIT = { cost: 30, growth: 2, maxLevel: 6 } as const;
+
 export const saveSchema: SaveSchema<GameSave> = {
-  version: 3,
+  version: 4,
   defaults: () => ({
     stars: {},
     currency: 0,
@@ -38,6 +40,19 @@ export const saveSchema: SaveSchema<GameSave> = {
     3: (data) => {
       const { bestScore: _bestScore, levelsCompleted: _levelsCompleted, ...rest } = data;
       return { ...rest, stars: {}, currency: 0, tree: {}, placements: {}, tutorialSeen: false };
+    },
+    4: (data) => {
+      const tree: unknown = data.tree;
+      if (typeof tree !== 'object' || tree === null) return data;
+      const raw: unknown = Reflect.get(tree, 'limit');
+      const levels = typeof raw === 'number' && Number.isFinite(raw) ? Math.floor(raw) : 0;
+      const rest = Object.fromEntries(Object.entries(tree).filter(([key]) => key !== 'limit'));
+      let refund = 0;
+      for (let level = 0; level < Math.min(levels, LEGACY_LIMIT.maxLevel); level += 1) {
+        refund += Math.round(LEGACY_LIMIT.cost * LEGACY_LIMIT.growth ** level);
+      }
+      const currency = typeof data.currency === 'number' ? data.currency : 0;
+      return { ...data, tree: rest, currency: currency + refund };
     },
   },
 };

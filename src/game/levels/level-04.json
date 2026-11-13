@@ -147,7 +147,7 @@
     }
   ],
   "baseHp": 35,
-  "turretLimit": 6,
+  "turretLimit": 12,
   "win": {
     "type": "timer",
     "seconds": 320

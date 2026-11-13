@@ -68,7 +68,7 @@
   "tree.special.beam": "ışın genişliği",
   "tree.ability.cooldown": "{name}: dolum −%{percent}",
   "tree.ability.power": "{name}: güç +%{percent}",
-  "tree.limit": "Kule sınırı +{count}",
+  "tree.count": "{name}: +{count} kurulum",
   "tree.baseHp": "Kale dayanıklılığı +%{percent}",
   "tree.reward": "Koşu ödülü +%{percent}",
   "tutorial.place": "Aşağıdan bir kule seç, sonra haritaya dokun",
