@@ -221,8 +221,7 @@
   "baseHp": 65,
   "turretLimit": 18,
   "win": {
-    "type": "timer",
-    "seconds": 220
+    "type": "waves"
   },
   "difficulty": {
     "hp": 1.8,
@@ -233,42 +232,42 @@
       "groups": [
         {
           "goblin": "grunt",
-          "count": 89,
+          "count": 210,
           "duration": 14,
           "entry": "a",
           "delay": 0
         },
         {
           "goblin": "grunt",
-          "count": 89,
+          "count": 210,
           "duration": 14,
           "entry": "b",
           "delay": 0
         },
         {
           "goblin": "grunt",
-          "count": 89,
+          "count": 210,
           "duration": 14,
           "entry": "c",
           "delay": 0
         },
         {
           "goblin": "runner",
-          "count": 21,
+          "count": 50,
           "duration": 14,
           "entry": "a",
           "delay": 0
         },
         {
           "goblin": "runner",
-          "count": 21,
+          "count": 50,
           "duration": 14,
           "entry": "b",
           "delay": 0
         },
         {
           "goblin": "runner",
-          "count": 21,
+          "count": 50,
           "duration": 14,
           "entry": "c",
           "delay": 0
@@ -279,63 +278,63 @@
       "groups": [
         {
           "goblin": "grunt",
-          "count": 114,
+          "count": 270,
           "duration": 14,
           "entry": "a",
           "delay": 0
         },
         {
           "goblin": "grunt",
-          "count": 114,
+          "count": 270,
           "duration": 14,
           "entry": "b",
           "delay": 0
         },
         {
           "goblin": "grunt",
-          "count": 114,
+          "count": 270,
           "duration": 14,
           "entry": "c",
           "delay": 0
         },
         {
           "goblin": "shield",
-          "count": 15,
+          "count": 36,
           "duration": 14,
           "entry": "a",
           "delay": 0
         },
         {
           "goblin": "shield",
-          "count": 15,
+          "count": 36,
           "duration": 14,
           "entry": "b",
           "delay": 0
         },
         {
           "goblin": "shield",
-          "count": 15,
+          "count": 36,
           "duration": 14,
           "entry": "c",
           "delay": 0
         },
         {
           "goblin": "glider",
-          "count": 8,
+          "count": 18,
           "duration": 10,
           "entry": "a",
           "delay": 3
         },
         {
           "goblin": "glider",
-          "count": 8,
+          "count": 18,
           "duration": 10,
           "entry": "b",
           "delay": 3
         },
         {
           "goblin": "glider",
-          "count": 8,
+          "count": 18,
           "duration": 10,
           "entry": "c",
           "delay": 3
@@ -346,63 +345,63 @@
       "groups": [
         {
           "goblin": "grunt",
-          "count": 139,
+          "count": 329,
           "duration": 14,
           "entry": "a",
           "delay": 0
         },
         {
           "goblin": "grunt",
-          "count": 139,
+          "count": 329,
           "duration": 14,
           "entry": "b",
           "delay": 0
         },
         {
           "goblin": "grunt",
-          "count": 139,
+          "count": 329,
           "duration": 14,
           "entry": "c",
           "delay": 0
         },
         {
           "goblin": "brute",
-          "count": 3,
+          "count": 7,
           "duration": 10,
           "entry": "a",
           "delay": 2
         },
         {
           "goblin": "brute",
-          "count": 3,
+          "count": 7,
           "duration": 10,
           "entry": "b",
           "delay": 2
         },
         {
           "goblin": "brute",
-          "count": 3,
+          "count": 7,
           "duration": 10,
           "entry": "c",
           "delay": 2
         },
         {
           "goblin": "shaman",
-          "count": 4,
+          "count": 9,
           "duration": 10,
           "entry": "a",
           "delay": 3
         },
         {
           "goblin": "shaman",
-          "count": 4,
+          "count": 9,
           "duration": 10,
           "entry": "b",
           "delay": 3
         },
         {
           "goblin": "shaman",
-          "count": 4,
+          "count": 9,
           "duration": 10,
           "entry": "c",
           "delay": 3

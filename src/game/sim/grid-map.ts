@@ -68,7 +68,7 @@ export class GridMap {
     this.blockMove = new Uint8Array(size);
     this.blockSight = new Uint8Array(size);
     this.zone = new Uint8Array(size);
-    this.buildable = new Uint8Array(size).fill(1);
+    this.buildable = new Uint8Array(size);
     for (let cy = 0; cy < this.rows; cy += 1) {
       for (let cx = 0; cx < this.cols; cx += 1) {
         const x = (cx + 0.5) * this.cell;
@@ -77,12 +77,16 @@ export class GridMap {
         for (const zone of level.zones) {
           if (rectContains(zone, x, y)) this.zone[c] = 1;
         }
+        let ground = false;
+        let blocked = false;
         for (const obstacle of level.obstacles) {
           if (!obstacleContains(obstacle, x, y)) continue;
           this.blockMove[c] = 1;
           if (sightBlockers[obstacle.type]) this.blockSight[c] = 1;
-          if (!buildableTerrain[obstacle.type]) this.buildable[c] = 0;
+          if (buildableTerrain[obstacle.type]) ground = true;
+          else blocked = true;
         }
+        this.buildable[c] = ground && !blocked ? 1 : 0;
         if (this.zone[c]) {
           this.blockMove[c] = 0;
           this.blockSight[c] = 0;

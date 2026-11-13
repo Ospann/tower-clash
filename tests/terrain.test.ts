@@ -51,16 +51,23 @@ describe('cliffs', () => {
     expect(map.canBuild(360, 1080)).toBe(false);
   });
 
-  it('let turrets stand on a plateau above a corridor', () => {
+  it('let turrets stand only on plateaus, never on the goblin path', () => {
     const world = new World({ level: level([leftCliff, rightCliff]), manualSpawns: true });
     expect(world.placementIssue('ballista', 130, 500)).toBe('ok');
-    expect(world.placementIssue('ballista', 360, 500)).toBe('ok');
-    expect(world.placementIssue('ballista', 262, 500)).toBe('ok');
+    expect(world.placementIssue('ballista', 230, 500)).toBe('ok');
+    expect(world.placementIssue('ballista', 360, 500)).toBe('blocked');
+    expect(world.placementIssue('ballista', 262, 500)).toBe('blocked');
     const rock = new World({
-      level: level([leftCliff, { type: 'rock', shape: { kind: 'circle', x: 360, y: 500, r: 40 } }]),
+      level: level([leftCliff, { type: 'rock', shape: { kind: 'circle', x: 130, y: 500, r: 40 } }]),
       manualSpawns: true,
     });
-    expect(rock.placementIssue('ballista', 360, 500)).toBe('blocked');
+    expect(rock.placementIssue('ballista', 130, 500)).toBe('blocked');
+  });
+
+  it('keep open ground unbuildable', () => {
+    const map = new GridMap(level([]));
+    expect(map.canBuild(360, 500)).toBe(false);
+    expect(map.buildableCount()).toBe(0);
   });
 
   it('route goblins through the corridor between plateaus', () => {

@@ -17,7 +17,7 @@
   "hud.timer": "{seconds} sn",
   "prep.fight": "Savaş!",
   "prep.reset": "Sıfırla",
-  "prep.blocked": "Buraya konamaz",
+  "prep.blocked": "Kuleler yalnızca tepelere konur",
   "prep.limit": "Kule sınırına ulaşıldı",
   "prep.empty": "En az bir kule yerleştir",
   "turret.ballista": "Balista",

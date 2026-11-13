@@ -149,11 +149,10 @@
   "baseHp": 35,
   "turretLimit": 12,
   "win": {
-    "type": "timer",
-    "seconds": 320
+    "type": "waves"
   },
   "difficulty": {
-    "hp": 1.1,
+    "hp": 1.25,
     "speed": 1.05
   },
   "waves": [
@@ -161,14 +160,14 @@
       "groups": [
         {
           "goblin": "grunt",
-          "count": 140,
+          "count": 308,
           "duration": 14,
           "entry": "a",
           "delay": 0
         },
         {
           "goblin": "runner",
-          "count": 50,
+          "count": 110,
           "duration": 14,
           "entry": "a",
           "delay": 0
@@ -179,21 +178,21 @@
       "groups": [
         {
           "goblin": "grunt",
-          "count": 190,
+          "count": 418,
           "duration": 14,
           "entry": "a",
           "delay": 0
         },
         {
           "goblin": "runner",
-          "count": 70,
+          "count": 154,
           "duration": 14,
           "entry": "a",
           "delay": 0
         },
         {
           "goblin": "brute",
-          "count": 3,
+          "count": 7,
           "duration": 6,
           "entry": "a",
           "delay": 4
@@ -204,21 +203,21 @@
       "groups": [
         {
           "goblin": "grunt",
-          "count": 240,
+          "count": 528,
           "duration": 14,
           "entry": "a",
           "delay": 0
         },
         {
           "goblin": "shield",
-          "count": 35,
+          "count": 77,
           "duration": 12,
           "entry": "a",
           "delay": 2
         },
         {
           "goblin": "brute",
-          "count": 5,
+          "count": 11,
           "duration": 6,
           "entry": "a",
           "delay": 4

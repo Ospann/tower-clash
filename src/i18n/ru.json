@@ -17,7 +17,7 @@
   "hud.timer": "{seconds} с",
   "prep.fight": "В бой!",
   "prep.reset": "Сброс",
-  "prep.blocked": "Здесь ставить нельзя",
+  "prep.blocked": "Ставить можно только на возвышенность",
   "prep.limit": "Достигнут лимит турелей",
   "prep.empty": "Поставь хотя бы одну турель",
   "turret.ballista": "Баллиста",

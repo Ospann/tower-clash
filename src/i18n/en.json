@@ -17,7 +17,7 @@
   "hud.timer": "{seconds} s",
   "prep.fight": "Fight!",
   "prep.reset": "Reset",
-  "prep.blocked": "Can't place here",
+  "prep.blocked": "Turrets go on high ground only",
   "prep.limit": "Turret limit reached",
   "prep.empty": "Place at least one turret",
   "turret.ballista": "Ballista",

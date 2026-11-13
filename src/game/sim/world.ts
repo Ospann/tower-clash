@@ -31,7 +31,7 @@ import {
 import { createRng, type Rng } from './rng';
 import { SpatialGrid } from './spatial-grid';
 import { turretSpec, updateTurrets, type Turret, type TurretSpec } from './turrets';
-import { WaveRunner } from './waves';
+import { levelGoblinCount, WaveRunner } from './waves';
 
 export type WorldPhase = 'prep' | 'battle' | 'won' | 'lost';
 export type PlacementIssue = 'ok' | 'limit' | 'locked' | 'blocked';
@@ -101,6 +101,7 @@ export class World {
   readonly query = new Int32Array(4096);
   readonly invulnerable: boolean;
   readonly turretLimit: number;
+  readonly goblinTotal: number;
   readonly runner: WaveRunner;
   readonly abilityCooldown: Record<AbilityKind, number> = { airstrike: 0, pillar: 0, bigBang: 0 };
   private readonly manualSpawns: boolean;
@@ -116,6 +117,7 @@ export class World {
   bounty = 0;
   leaked = 0;
   revived = false;
+  private splitMissed = 0;
 
   constructor(options: WorldOptions) {
     const { level } = options;
@@ -134,6 +136,7 @@ export class World {
       simConfig.hordeCapacity,
     );
     this.runner = new WaveRunner(level);
+    this.goblinTotal = levelGoblinCount(level);
     this.baseMaxHp = Math.round(level.baseHp * this.loadout.baseHp);
     this.baseHp = this.baseMaxHp;
     this.turretLimit = Math.min(
@@ -159,7 +162,7 @@ export class World {
   }
 
   get goblinsLeft(): number {
-    return this.runner.upcoming + this.horde.count;
+    return Math.max(0, this.goblinTotal - this.kills - this.leaked - this.splitMissed);
   }
 
   spawnGoblin(kind: GoblinKind, x: number, y: number): number {
@@ -663,15 +666,17 @@ export class World {
     const trait = goblinTraits.boss;
     this.events.push(FxKind.BossDeath, x, y);
     for (let n = 0; n < trait.splitCount; n += 1) {
-      for (let attempt = 0; attempt < 5; attempt += 1) {
+      let spawned = false;
+      for (let attempt = 0; attempt < 5 && !spawned; attempt += 1) {
         const angle = this.rng() * Math.PI * 2;
         const reach = Math.sqrt(this.rng()) * trait.splitRadius;
         const sx = x + Math.cos(angle) * reach;
         const sy = y + Math.sin(angle) * reach;
         if (this.map.blocked(sx, sy)) continue;
-        this.spawnGoblin(trait.splitKind, sx, sy);
-        break;
+        spawned = this.spawnGoblin(trait.splitKind, sx, sy) >= 0;
+        if (!spawned) break;
       }
+      if (!spawned) this.splitMissed += 1;
     }
   }
 }

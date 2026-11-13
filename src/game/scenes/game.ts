@@ -916,7 +916,7 @@ export class GameScene extends Phaser.Scene {
         turrets: world.turrets.length,
         turretLimit: world.turretLimit,
         counts: this.turretCounts(),
-        goblins: timed ? world.horde.count : world.goblinsLeft,
+        goblins: world.goblinsLeft,
         status,
         battle,
         defeat: this.defeated,

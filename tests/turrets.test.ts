@@ -1,10 +1,33 @@
 import { describe, expect, it } from 'vitest';
-import { abilities, goblins, rocket, turretRules, turrets } from '../src/game/balance';
+import {
+  abilities,
+  goblins,
+  goblinTraits,
+  rocket,
+  turretRules,
+  turrets,
+} from '../src/game/balance';
 import type { LevelData, Obstacle } from '../src/game/levels/level-types';
 import { applyDamage, applySlow, computeDamage } from '../src/game/sim/damage';
 import { neutralLoadout } from '../src/game/sim/loadout';
 import { angleDelta, inSector, pickTarget, turretSpec } from '../src/game/sim/turrets';
 import { World } from '../src/game/sim/world';
+
+const PADS: readonly [number, number][] = [
+  [360, 300],
+  [200, 300],
+  [500, 300],
+  [300, 420],
+  [360, 600],
+  [360, 620],
+  [440, 640],
+  [360, 700],
+];
+
+const pads: Obstacle[] = PADS.map(([x, y]) => ({
+  type: 'cliff',
+  shape: { kind: 'circle', x, y, r: 40 },
+}));
 
 function level(obstacles: Obstacle[] = [], extra: Partial<LevelData> = {}): LevelData {
   return {
@@ -13,7 +36,7 @@ function level(obstacles: Obstacle[] = [], extra: Partial<LevelData> = {}): Leve
     chapter: 1,
     grid: { cols: 36, rows: 64, cell: 20 },
     tiles: 'meadow',
-    obstacles,
+    obstacles: [...pads, ...obstacles],
     entries: [{ id: 'a', x: 360, y: 0, radius: 40 }],
     zones: [{ x: 0, y: 1040, w: 720, h: 80 }],
     baseHp: 100,
@@ -199,7 +222,7 @@ describe('turrets in battle', () => {
       const turret = world.addTurret(kind, 360, 700, UP);
       expect(turret).not.toBeNull();
       world.startBattle();
-      const brute = world.spawnGoblin('brute', 360, 580);
+      const brute = world.spawnGoblin('brute', 400, 590);
       world.horde.speed[brute] = 0;
       run(world, 4);
       expect(world.horde.hp[brute]).toBeLessThan(goblins.brute.hp);
@@ -375,6 +398,24 @@ describe('goblins left counter', () => {
     world.step(1 / 60);
     expect(world.goblinsLeft).toBe(7 - alive);
     run(world, 60);
+    expect(world.goblinsLeft).toBe(0);
+  });
+
+  it('counts the boss escort up front and never goes up', () => {
+    const bossLevel = level([], {
+      waves: [{ groups: [{ goblin: 'boss', count: 1, duration: 0, entry: 'a', delay: 0 }] }],
+    });
+    const world = new World({ level: bossLevel, seed: 4 });
+    const total = 1 + goblinTraits.boss.splitCount;
+    expect(world.goblinsLeft).toBe(total);
+    world.startBattle();
+    let last = world.goblinsLeft;
+    for (let i = 0; i < 60 * 90 && world.phase === 'battle'; i += 1) {
+      if (i === 120) for (let g = 0; g < world.horde.count; g += 1) world.horde.hp[g] = 0;
+      world.step(1 / 60);
+      expect(world.goblinsLeft).toBeLessThanOrEqual(last);
+      last = world.goblinsLeft;
+    }
     expect(world.goblinsLeft).toBe(0);
   });
 });

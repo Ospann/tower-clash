@@ -1,4 +1,4 @@
-import { turretRules } from '../balance';
+import { goblinTraits, turretRules } from '../balance';
 import type { LevelData, WaveGroup } from '../levels/level-types';
 import type { World } from './world';
 
@@ -95,6 +95,11 @@ export class WaveRunner {
 
 export function levelGoblinCount(level: LevelData): number {
   let total = 0;
-  for (const wave of level.waves) for (const group of wave.groups) total += group.count;
+  for (const wave of level.waves) {
+    for (const group of wave.groups) {
+      const split = group.goblin === 'boss' ? goblinTraits.boss.splitCount : 0;
+      total += group.count * (1 + split);
+    }
+  }
   return total;
 }

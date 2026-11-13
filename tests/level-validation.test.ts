@@ -11,7 +11,10 @@ function valid(): LevelData {
     chapter: 1,
     grid: { cols: 36, rows: 64, cell: 20 },
     tiles: 'meadow',
-    obstacles: [{ type: 'rock', shape: { kind: 'rect', x: 100, y: 400, w: 100, h: 60 } }],
+    obstacles: [
+      { type: 'cliff', shape: { kind: 'rect', x: 0, y: 0, w: 200, h: 1040 } },
+      { type: 'rock', shape: { kind: 'rect', x: 100, y: 400, w: 100, h: 60 } },
+    ],
     entries: [{ id: 'n', x: 360, y: 0, radius: 80 }],
     zones: [{ x: 0, y: 1040, w: 720, h: 90 }],
     baseHp: 20,
@@ -95,7 +98,10 @@ describe('validateLevel', () => {
 
   it('rejects an entry that cannot reach the red zone', () => {
     const issues = broken((l) => {
-      l.obstacles = [{ type: 'rock', shape: { kind: 'rect', x: 0, y: 500, w: 720, h: 40 } }];
+      l.obstacles = [
+        { type: 'cliff', shape: { kind: 'rect', x: 0, y: 0, w: 200, h: 400 } },
+        { type: 'rock', shape: { kind: 'rect', x: 0, y: 500, w: 720, h: 40 } },
+      ];
     });
     expect(issues).toEqual([
       'entries[0]: entry "n" cannot reach a red zone (blocked by obstacles)',
