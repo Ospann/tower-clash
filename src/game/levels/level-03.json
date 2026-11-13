@@ -1,0 +1,122 @@
+{
+  "id": "level-03",
+  "name": "level.03",
+  "chapter": 1,
+  "grid": {
+    "cols": 36,
+    "rows": 64,
+    "cell": 20
+  },
+  "tiles": "meadow",
+  "obstacles": [
+    {
+      "type": "ruins",
+      "shape": {
+        "kind": "rect",
+        "x": 300,
+        "y": 560,
+        "w": 120,
+        "h": 80
+      }
+    }
+  ],
+  "entries": [
+    {
+      "id": "nw",
+      "x": 120,
+      "y": 0,
+      "radius": 100
+    }
+  ],
+  "zones": [
+    {
+      "x": 360,
+      "y": 1040,
+      "w": 360,
+      "h": 90
+    }
+  ],
+  "baseHp": 30,
+  "turretLimit": 4,
+  "win": {
+    "type": "waves"
+  },
+  "difficulty": {
+    "hp": 1.05,
+    "speed": 1
+  },
+  "waves": [
+    {
+      "groups": [
+        {
+          "goblin": "grunt",
+          "count": 48,
+          "duration": 10,
+          "entry": "nw",
+          "delay": 0
+        }
+      ]
+    },
+    {
+      "groups": [
+        {
+          "goblin": "grunt",
+          "count": 72,
+          "duration": 12,
+          "entry": "nw",
+          "delay": 0
+        },
+        {
+          "goblin": "shield",
+          "count": 6,
+          "duration": 8,
+          "entry": "nw",
+          "delay": 4
+        }
+      ]
+    },
+    {
+      "groups": [
+        {
+          "goblin": "grunt",
+          "count": 104,
+          "duration": 14,
+          "entry": "nw",
+          "delay": 0
+        },
+        {
+          "goblin": "shield",
+          "count": 13,
+          "duration": 10,
+          "entry": "nw",
+          "delay": 3
+        },
+        {
+          "goblin": "runner",
+          "count": 24,
+          "duration": 8,
+          "entry": "nw",
+          "delay": 6
+        }
+      ]
+    },
+    {
+      "groups": [
+        {
+          "goblin": "grunt",
+          "count": 144,
+          "duration": 15,
+          "entry": "nw",
+          "delay": 0
+        },
+        {
+          "goblin": "shield",
+          "count": 21,
+          "duration": 12,
+          "entry": "nw",
+          "delay": 3
+        }
+      ]
+    }
+  ]
+}

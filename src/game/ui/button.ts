@@ -4,6 +4,7 @@ import { FONT_FAMILY } from '../keys';
 export interface ButtonOptions {
   width?: number;
   height?: number;
+  radius?: number;
   color?: number;
   textColor?: string;
   fontSize?: number;
@@ -15,6 +16,7 @@ export class Button extends Phaser.GameObjects.Container {
   private readonly btnWidth: number;
   private readonly btnHeight: number;
   private readonly baseColor: number;
+  private readonly radius: number;
   private enabled = true;
 
   constructor(
@@ -29,6 +31,7 @@ export class Button extends Phaser.GameObjects.Container {
     this.btnWidth = options.width ?? 440;
     this.btnHeight = options.height ?? 110;
     this.baseColor = options.color ?? 0x4f7cff;
+    this.radius = options.radius ?? Math.min(28, this.btnHeight / 3);
 
     this.background = scene.add.graphics();
     this.label = scene.add
@@ -37,6 +40,7 @@ export class Button extends Phaser.GameObjects.Container {
         fontSize: `${options.fontSize ?? 44}px`,
         color: options.textColor ?? '#ffffff',
         fontStyle: 'bold',
+        align: 'center',
       })
       .setOrigin(0.5);
 
@@ -64,11 +68,16 @@ export class Button extends Phaser.GameObjects.Container {
   }
 
   setText(text: string): this {
-    this.label.setText(text);
+    if (this.label.text !== text) this.label.setText(text);
     return this;
   }
 
+  get isEnabled(): boolean {
+    return this.enabled;
+  }
+
   setEnabled(enabled: boolean): this {
+    if (this.enabled === enabled) return this;
     this.enabled = enabled;
     this.draw(enabled ? this.baseColor : 0x555a6e);
     this.setAlpha(enabled ? 1 : 0.7);
@@ -83,7 +92,7 @@ export class Button extends Phaser.GameObjects.Container {
       -this.btnHeight / 2 + 8,
       this.btnWidth,
       this.btnHeight,
-      28,
+      this.radius,
     );
     this.background.fillStyle(color, 1);
     this.background.fillRoundedRect(
@@ -91,7 +100,7 @@ export class Button extends Phaser.GameObjects.Container {
       -this.btnHeight / 2,
       this.btnWidth,
       this.btnHeight,
-      28,
+      this.radius,
     );
   }
 

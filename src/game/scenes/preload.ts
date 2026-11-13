@@ -1,5 +1,8 @@
 import Phaser from 'phaser';
-import { AssetKey, SceneKey } from '../keys';
+import { generateArt } from '../art';
+import { generateSfx } from '../audio/sfx';
+import { debugFlags } from '../debug/flags';
+import { SceneKey } from '../keys';
 import { services } from '../services';
 import { addLabel } from '../ui/text';
 
@@ -29,14 +32,19 @@ export class PreloadScene extends Phaser.Scene {
       bar.fillRoundedRect(x, y, Math.max(barHeight, barWidth * progress), barHeight, barHeight / 2);
       label.setText(i18n.t('loading', { percent: Math.round(progress * 100) }));
     });
-
-    this.load.setPath('assets');
-    this.load.svg(AssetKey.Star, 'star.svg', { width: 128, height: 128 });
-    this.load.audio(AssetKey.Tap, 'tap.wav');
   }
 
   create(): void {
+    generateArt(this.textures);
+    generateSfx(this);
     services().platform.gameReady();
-    this.scene.start(SceneKey.Menu);
+    if (import.meta.env.DEV && debugFlags.editor) {
+      void import('./editor').then(({ EditorScene }) => {
+        this.scene.add(SceneKey.Editor, EditorScene, false);
+        this.scene.start(SceneKey.Editor);
+      });
+      return;
+    }
+    this.scene.start(debugFlags.stress > 0 ? SceneKey.Game : SceneKey.Menu);
   }
 }

@@ -1,0 +1,129 @@
+{
+  "id": "level-05",
+  "name": "level.05",
+  "chapter": 2,
+  "grid": {
+    "cols": 36,
+    "rows": 64,
+    "cell": 20
+  },
+  "tiles": "swamp",
+  "obstacles": [
+    {
+      "type": "water",
+      "shape": {
+        "kind": "rect",
+        "x": 220,
+        "y": 420,
+        "w": 280,
+        "h": 260
+      }
+    }
+  ],
+  "entries": [
+    {
+      "id": "n",
+      "x": 360,
+      "y": 0,
+      "radius": 160
+    }
+  ],
+  "zones": [
+    {
+      "x": 0,
+      "y": 1040,
+      "w": 720,
+      "h": 90
+    }
+  ],
+  "baseHp": 40,
+  "turretLimit": 5,
+  "win": {
+    "type": "waves"
+  },
+  "difficulty": {
+    "hp": 1.2,
+    "speed": 1
+  },
+  "waves": [
+    {
+      "groups": [
+        {
+          "goblin": "grunt",
+          "count": 112,
+          "duration": 12,
+          "entry": "n",
+          "delay": 0
+        }
+      ]
+    },
+    {
+      "groups": [
+        {
+          "goblin": "grunt",
+          "count": 160,
+          "duration": 14,
+          "entry": "n",
+          "delay": 0
+        },
+        {
+          "goblin": "shield",
+          "count": 19,
+          "duration": 10,
+          "entry": "n",
+          "delay": 3
+        }
+      ]
+    },
+    {
+      "groups": [
+        {
+          "goblin": "grunt",
+          "count": 208,
+          "duration": 15,
+          "entry": "n",
+          "delay": 0
+        },
+        {
+          "goblin": "runner",
+          "count": 56,
+          "duration": 10,
+          "entry": "n",
+          "delay": 4
+        },
+        {
+          "goblin": "brute",
+          "count": 3,
+          "duration": 8,
+          "entry": "n",
+          "delay": 5
+        }
+      ]
+    },
+    {
+      "groups": [
+        {
+          "goblin": "grunt",
+          "count": 272,
+          "duration": 16,
+          "entry": "n",
+          "delay": 0
+        },
+        {
+          "goblin": "shield",
+          "count": 32,
+          "duration": 12,
+          "entry": "n",
+          "delay": 3
+        },
+        {
+          "goblin": "brute",
+          "count": 5,
+          "duration": 10,
+          "entry": "n",
+          "delay": 4
+        }
+      ]
+    }
+  ]
+}

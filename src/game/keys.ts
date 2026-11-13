@@ -2,16 +2,18 @@ export const SceneKey = {
   Boot: 'Boot',
   Preload: 'Preload',
   Menu: 'Menu',
+  LevelSelect: 'LevelSelect',
+  Tree: 'Tree',
   Game: 'Game',
   Pause: 'Pause',
-  GameOver: 'GameOver',
+  Result: 'Result',
+  Editor: 'Editor',
 } as const;
 
 export type SceneKey = (typeof SceneKey)[keyof typeof SceneKey];
 
-export const AssetKey = {
-  Star: 'star',
-  Tap: 'tap',
+export const GameEvent = {
+  Abandon: 'abandon',
 } as const;
 
 export const FONT_FAMILY =

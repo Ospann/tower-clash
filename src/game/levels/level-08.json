@@ -1,0 +1,198 @@
+{
+  "id": "level-08",
+  "name": "level.08",
+  "chapter": 2,
+  "grid": {
+    "cols": 36,
+    "rows": 64,
+    "cell": 20
+  },
+  "tiles": "ash",
+  "obstacles": [
+    {
+      "type": "rock",
+      "shape": {
+        "kind": "rect",
+        "x": 240,
+        "y": 380,
+        "w": 240,
+        "h": 100
+      }
+    },
+    {
+      "type": "water",
+      "shape": {
+        "kind": "rect",
+        "x": 380,
+        "y": 700,
+        "w": 340,
+        "h": 120
+      }
+    }
+  ],
+  "entries": [
+    {
+      "id": "n",
+      "x": 360,
+      "y": 0,
+      "radius": 180
+    },
+    {
+      "id": "w",
+      "x": 0,
+      "y": 880,
+      "radius": 70
+    }
+  ],
+  "zones": [
+    {
+      "x": 0,
+      "y": 1040,
+      "w": 720,
+      "h": 90
+    }
+  ],
+  "baseHp": 55,
+  "turretLimit": 6,
+  "win": {
+    "type": "waves"
+  },
+  "difficulty": {
+    "hp": 1.5,
+    "speed": 1.03
+  },
+  "waves": [
+    {
+      "groups": [
+        {
+          "goblin": "grunt",
+          "count": 204,
+          "duration": 12,
+          "entry": "n",
+          "delay": 0
+        },
+        {
+          "goblin": "runner",
+          "count": 26,
+          "duration": 6,
+          "entry": "w",
+          "delay": 6
+        }
+      ]
+    },
+    {
+      "groups": [
+        {
+          "goblin": "grunt",
+          "count": 272,
+          "duration": 14,
+          "entry": "n",
+          "delay": 0
+        },
+        {
+          "goblin": "shield",
+          "count": 34,
+          "duration": 10,
+          "entry": "n",
+          "delay": 3
+        },
+        {
+          "goblin": "runner",
+          "count": 42,
+          "duration": 8,
+          "entry": "w",
+          "delay": 5
+        }
+      ]
+    },
+    {
+      "groups": [
+        {
+          "goblin": "grunt",
+          "count": 340,
+          "duration": 15,
+          "entry": "n",
+          "delay": 0
+        },
+        {
+          "goblin": "brute",
+          "count": 7,
+          "duration": 10,
+          "entry": "n",
+          "delay": 4
+        },
+        {
+          "goblin": "grunt",
+          "count": 68,
+          "duration": 8,
+          "entry": "w",
+          "delay": 6
+        }
+      ]
+    },
+    {
+      "groups": [
+        {
+          "goblin": "grunt",
+          "count": 408,
+          "duration": 16,
+          "entry": "n",
+          "delay": 0
+        },
+        {
+          "goblin": "shaman",
+          "count": 12,
+          "duration": 12,
+          "entry": "n",
+          "delay": 3
+        },
+        {
+          "goblin": "runner",
+          "count": 76,
+          "duration": 8,
+          "entry": "w",
+          "delay": 5
+        },
+        {
+          "goblin": "brute",
+          "count": 3,
+          "duration": 6,
+          "entry": "w",
+          "delay": 8
+        }
+      ]
+    },
+    {
+      "groups": [
+        {
+          "goblin": "boss",
+          "count": 1,
+          "duration": 0,
+          "entry": "n",
+          "delay": 6
+        },
+        {
+          "goblin": "grunt",
+          "count": 442,
+          "duration": 18,
+          "entry": "n",
+          "delay": 0
+        },
+        {
+          "goblin": "shield",
+          "count": 51,
+          "duration": 14,
+          "entry": "n",
+          "delay": 3
+        },
+        {
+          "goblin": "grunt",
+          "count": 102,
+          "duration": 10,
+          "entry": "w",
+          "delay": 8
+        }
+      ]
+    }
+  ]
+}

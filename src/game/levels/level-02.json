@@ -1,0 +1,125 @@
+{
+  "id": "level-02",
+  "name": "level.02",
+  "chapter": 1,
+  "grid": {
+    "cols": 36,
+    "rows": 64,
+    "cell": 20
+  },
+  "tiles": "meadow",
+  "obstacles": [
+    {
+      "type": "rock",
+      "shape": {
+        "kind": "rect",
+        "x": 40,
+        "y": 520,
+        "w": 100,
+        "h": 80
+      }
+    },
+    {
+      "type": "rock",
+      "shape": {
+        "kind": "rect",
+        "x": 580,
+        "y": 640,
+        "w": 100,
+        "h": 80
+      }
+    }
+  ],
+  "entries": [
+    {
+      "id": "n",
+      "x": 360,
+      "y": 0,
+      "radius": 200
+    }
+  ],
+  "zones": [
+    {
+      "x": 0,
+      "y": 1040,
+      "w": 720,
+      "h": 90
+    }
+  ],
+  "baseHp": 25,
+  "turretLimit": 4,
+  "win": {
+    "type": "waves"
+  },
+  "difficulty": {
+    "hp": 1,
+    "speed": 1
+  },
+  "waves": [
+    {
+      "groups": [
+        {
+          "goblin": "grunt",
+          "count": 22,
+          "duration": 10,
+          "entry": "n",
+          "delay": 0
+        }
+      ]
+    },
+    {
+      "groups": [
+        {
+          "goblin": "grunt",
+          "count": 33,
+          "duration": 12,
+          "entry": "n",
+          "delay": 0
+        },
+        {
+          "goblin": "runner",
+          "count": 7,
+          "duration": 6,
+          "entry": "n",
+          "delay": 5
+        }
+      ]
+    },
+    {
+      "groups": [
+        {
+          "goblin": "grunt",
+          "count": 50,
+          "duration": 14,
+          "entry": "n",
+          "delay": 0
+        },
+        {
+          "goblin": "runner",
+          "count": 13,
+          "duration": 8,
+          "entry": "n",
+          "delay": 4
+        }
+      ]
+    },
+    {
+      "groups": [
+        {
+          "goblin": "grunt",
+          "count": 72,
+          "duration": 15,
+          "entry": "n",
+          "delay": 0
+        },
+        {
+          "goblin": "runner",
+          "count": 20,
+          "duration": 10,
+          "entry": "n",
+          "delay": 3
+        }
+      ]
+    }
+  ]
+}

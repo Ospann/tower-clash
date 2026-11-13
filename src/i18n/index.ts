@@ -14,3 +14,11 @@ export function createI18n(): I18n<typeof en, Language> {
 }
 
 export type GameI18n = ReturnType<typeof createI18n>;
+
+export function isTranslationKey(key: string): key is TranslationKey {
+  return Object.hasOwn(en, key);
+}
+
+export function translateKey(i18n: GameI18n, key: string): string {
+  return isTranslationKey(key) ? i18n.t(key) : key;
+}

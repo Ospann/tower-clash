@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
 import type { Language } from '../../i18n';
+import { ATLAS_KEY, goblinFrame, palette } from '../art';
+import { GOBLIN_KINDS } from '../balance';
 import { SceneKey } from '../keys';
 import { services } from '../services';
 import { Button } from '../ui/button';
@@ -11,21 +13,47 @@ export class MenuScene extends Phaser.Scene {
   }
 
   create(): void {
-    const { i18n, save, mute } = services();
+    const { i18n, save, mute, gameplay } = services();
     const { width, height } = this.scale;
     const cx = width / 2;
+    gameplay.stop();
+    this.cameras.main.fadeIn(200);
 
-    const title = addLabel(this, cx, height * 0.22, i18n.t('menu.title'), 96);
-    const best = addLabel(this, cx, height * 0.32, '', 40, '#c9cbe0');
+    const title = addLabel(this, cx, height * 0.17, i18n.t('menu.title'), 68, palette.gold);
+    title.setStroke(palette.outline, 10).setFontStyle('bold');
 
-    const play = new Button(this, cx, height * 0.5, '', () => {
-      this.scene.start(SceneKey.Game);
+    GOBLIN_KINDS.forEach((kind, index) => {
+      if (kind === 'boss') return;
+      const goblin = this.add
+        .image(cx - 200 + index * 80, height * 0.31, ATLAS_KEY, goblinFrame(kind, 0))
+        .setScale(2.4);
+      this.tweens.add({
+        targets: goblin,
+        y: goblin.y - 10,
+        duration: 320 + index * 40,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+      });
     });
 
+    const play = new Button(this, cx, height * 0.46, '', () => {
+      this.scene.start(SceneKey.LevelSelect);
+    });
+    const tree = new Button(
+      this,
+      cx,
+      height * 0.57,
+      '',
+      () => {
+        this.scene.start(SceneKey.Tree);
+      },
+      { color: 0x7d4bc4, fontSize: 38 },
+    );
     const sound = new Button(
       this,
       cx,
-      height * 0.62,
+      height * 0.7,
       '',
       () => {
         const enabled = !save.data.soundEnabled;
@@ -33,13 +61,12 @@ export class MenuScene extends Phaser.Scene {
         mute.set('settings', !enabled);
         render();
       },
-      { color: 0x3a3f58 },
+      { color: 0x3a3f58, fontSize: 36 },
     );
-
     const language = new Button(
       this,
       cx,
-      height * 0.74,
+      height * 0.81,
       '',
       () => {
         const list = i18n.languages;
@@ -48,17 +75,16 @@ export class MenuScene extends Phaser.Scene {
         save.set('language', next);
         render();
       },
-      { color: 0x3a3f58 },
+      { color: 0x3a3f58, fontSize: 34 },
     );
 
     const render = (): void => {
       title.setText(i18n.t('menu.title'));
-      best.setText(i18n.t('menu.best', { score: save.data.bestScore }));
       play.setText(i18n.t('menu.play'));
+      tree.setText(i18n.t('menu.tree'));
       sound.setText(i18n.t(save.data.soundEnabled ? 'menu.sound.on' : 'menu.sound.off'));
       language.setText(i18n.t('menu.language', { language: i18n.t(`language.${i18n.language}`) }));
     };
-
     render();
   }
 }

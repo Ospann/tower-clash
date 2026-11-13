@@ -2,10 +2,12 @@ import Phaser from 'phaser';
 import { gameConfig } from './config';
 import { BootScene } from './scenes/boot';
 import { GameScene } from './scenes/game';
-import { GameOverScene } from './scenes/game-over';
+import { LevelSelectScene } from './scenes/level-select';
 import { MenuScene } from './scenes/menu';
 import { PauseScene } from './scenes/pause';
 import { PreloadScene } from './scenes/preload';
+import { ResultScene } from './scenes/result';
+import { TreeScene } from './scenes/tree';
 
 export function createGame(parent: HTMLElement): Phaser.Game {
   return new Phaser.Game({
@@ -26,6 +28,15 @@ export function createGame(parent: HTMLElement): Phaser.Game {
       antialias: true,
       roundPixels: false,
     },
-    scene: [BootScene, PreloadScene, MenuScene, GameScene, PauseScene, GameOverScene],
+    scene: [
+      BootScene,
+      PreloadScene,
+      MenuScene,
+      LevelSelectScene,
+      TreeScene,
+      GameScene,
+      PauseScene,
+      ResultScene,
+    ],
   });
 }

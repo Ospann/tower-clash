@@ -1,0 +1,546 @@
+{
+  "id": "level-12",
+  "name": "level.12",
+  "chapter": 3,
+  "grid": {
+    "cols": 36,
+    "rows": 64,
+    "cell": 20
+  },
+  "tiles": "ash",
+  "obstacles": [
+    {
+      "type": "rock",
+      "shape": {
+        "kind": "rect",
+        "x": 120,
+        "y": 340,
+        "w": 140,
+        "h": 100
+      }
+    },
+    {
+      "type": "rock",
+      "shape": {
+        "kind": "rect",
+        "x": 460,
+        "y": 340,
+        "w": 140,
+        "h": 100
+      }
+    },
+    {
+      "type": "water",
+      "shape": {
+        "kind": "rect",
+        "x": 280,
+        "y": 600,
+        "w": 160,
+        "h": 140
+      }
+    },
+    {
+      "type": "ruins",
+      "shape": {
+        "kind": "rect",
+        "x": 60,
+        "y": 760,
+        "w": 100,
+        "h": 80
+      }
+    },
+    {
+      "type": "ruins",
+      "shape": {
+        "kind": "rect",
+        "x": 560,
+        "y": 760,
+        "w": 100,
+        "h": 80
+      }
+    }
+  ],
+  "entries": [
+    {
+      "id": "n",
+      "x": 360,
+      "y": 0,
+      "radius": 200
+    },
+    {
+      "id": "w",
+      "x": 0,
+      "y": 560,
+      "radius": 80
+    },
+    {
+      "id": "e",
+      "x": 720,
+      "y": 560,
+      "radius": 80
+    }
+  ],
+  "zones": [
+    {
+      "x": 0,
+      "y": 1040,
+      "w": 720,
+      "h": 90
+    }
+  ],
+  "baseHp": 170,
+  "turretLimit": 8,
+  "win": {
+    "type": "waves"
+  },
+  "difficulty": {
+    "hp": 2.2,
+    "speed": 1.08
+  },
+  "waves": [
+    {
+      "groups": [
+        {
+          "goblin": "grunt",
+          "count": 58,
+          "duration": 12,
+          "entry": "n",
+          "delay": 0
+        },
+        {
+          "goblin": "grunt",
+          "count": 58,
+          "duration": 12,
+          "entry": "w",
+          "delay": 0
+        },
+        {
+          "goblin": "grunt",
+          "count": 58,
+          "duration": 12,
+          "entry": "e",
+          "delay": 0
+        }
+      ]
+    },
+    {
+      "groups": [
+        {
+          "goblin": "grunt",
+          "count": 74,
+          "duration": 14,
+          "entry": "n",
+          "delay": 0
+        },
+        {
+          "goblin": "grunt",
+          "count": 74,
+          "duration": 14,
+          "entry": "w",
+          "delay": 0
+        },
+        {
+          "goblin": "grunt",
+          "count": 74,
+          "duration": 14,
+          "entry": "e",
+          "delay": 0
+        },
+        {
+          "goblin": "shield",
+          "count": 8,
+          "duration": 12,
+          "entry": "n",
+          "delay": 3
+        },
+        {
+          "goblin": "shield",
+          "count": 8,
+          "duration": 12,
+          "entry": "w",
+          "delay": 3
+        },
+        {
+          "goblin": "shield",
+          "count": 8,
+          "duration": 12,
+          "entry": "e",
+          "delay": 3
+        },
+        {
+          "goblin": "glider",
+          "count": 7,
+          "duration": 10,
+          "entry": "n",
+          "delay": 4
+        },
+        {
+          "goblin": "glider",
+          "count": 7,
+          "duration": 10,
+          "entry": "w",
+          "delay": 4
+        },
+        {
+          "goblin": "glider",
+          "count": 7,
+          "duration": 10,
+          "entry": "e",
+          "delay": 4
+        }
+      ]
+    },
+    {
+      "groups": [
+        {
+          "goblin": "grunt",
+          "count": 91,
+          "duration": 15,
+          "entry": "n",
+          "delay": 0
+        },
+        {
+          "goblin": "grunt",
+          "count": 91,
+          "duration": 15,
+          "entry": "w",
+          "delay": 0
+        },
+        {
+          "goblin": "grunt",
+          "count": 91,
+          "duration": 15,
+          "entry": "e",
+          "delay": 0
+        },
+        {
+          "goblin": "runner",
+          "count": 26,
+          "duration": 10,
+          "entry": "n",
+          "delay": 3
+        },
+        {
+          "goblin": "runner",
+          "count": 26,
+          "duration": 10,
+          "entry": "w",
+          "delay": 3
+        },
+        {
+          "goblin": "runner",
+          "count": 26,
+          "duration": 10,
+          "entry": "e",
+          "delay": 3
+        },
+        {
+          "goblin": "shaman",
+          "count": 2,
+          "duration": 10,
+          "entry": "n",
+          "delay": 4
+        },
+        {
+          "goblin": "shaman",
+          "count": 2,
+          "duration": 10,
+          "entry": "w",
+          "delay": 4
+        },
+        {
+          "goblin": "shaman",
+          "count": 2,
+          "duration": 10,
+          "entry": "e",
+          "delay": 4
+        }
+      ]
+    },
+    {
+      "groups": [
+        {
+          "goblin": "boss",
+          "count": 1,
+          "duration": 0,
+          "entry": "n",
+          "delay": 5
+        },
+        {
+          "goblin": "grunt",
+          "count": 98,
+          "duration": 16,
+          "entry": "n",
+          "delay": 0
+        },
+        {
+          "goblin": "grunt",
+          "count": 98,
+          "duration": 16,
+          "entry": "w",
+          "delay": 0
+        },
+        {
+          "goblin": "grunt",
+          "count": 98,
+          "duration": 16,
+          "entry": "e",
+          "delay": 0
+        },
+        {
+          "goblin": "brute",
+          "count": 2,
+          "duration": 12,
+          "entry": "n",
+          "delay": 4
+        },
+        {
+          "goblin": "brute",
+          "count": 2,
+          "duration": 12,
+          "entry": "w",
+          "delay": 4
+        },
+        {
+          "goblin": "brute",
+          "count": 2,
+          "duration": 12,
+          "entry": "e",
+          "delay": 4
+        },
+        {
+          "goblin": "glider",
+          "count": 12,
+          "duration": 12,
+          "entry": "n",
+          "delay": 5
+        },
+        {
+          "goblin": "glider",
+          "count": 12,
+          "duration": 12,
+          "entry": "w",
+          "delay": 5
+        },
+        {
+          "goblin": "glider",
+          "count": 12,
+          "duration": 12,
+          "entry": "e",
+          "delay": 5
+        }
+      ]
+    },
+    {
+      "groups": [
+        {
+          "goblin": "grunt",
+          "count": 117,
+          "duration": 17,
+          "entry": "n",
+          "delay": 0
+        },
+        {
+          "goblin": "grunt",
+          "count": 117,
+          "duration": 17,
+          "entry": "w",
+          "delay": 0
+        },
+        {
+          "goblin": "grunt",
+          "count": 117,
+          "duration": 17,
+          "entry": "e",
+          "delay": 0
+        },
+        {
+          "goblin": "shield",
+          "count": 13,
+          "duration": 12,
+          "entry": "n",
+          "delay": 3
+        },
+        {
+          "goblin": "shield",
+          "count": 13,
+          "duration": 12,
+          "entry": "w",
+          "delay": 3
+        },
+        {
+          "goblin": "shield",
+          "count": 13,
+          "duration": 12,
+          "entry": "e",
+          "delay": 3
+        },
+        {
+          "goblin": "brute",
+          "count": 3,
+          "duration": 12,
+          "entry": "n",
+          "delay": 4
+        },
+        {
+          "goblin": "brute",
+          "count": 3,
+          "duration": 12,
+          "entry": "w",
+          "delay": 4
+        },
+        {
+          "goblin": "brute",
+          "count": 3,
+          "duration": 12,
+          "entry": "e",
+          "delay": 4
+        },
+        {
+          "goblin": "shaman",
+          "count": 3,
+          "duration": 12,
+          "entry": "n",
+          "delay": 3
+        },
+        {
+          "goblin": "shaman",
+          "count": 3,
+          "duration": 12,
+          "entry": "w",
+          "delay": 3
+        },
+        {
+          "goblin": "shaman",
+          "count": 3,
+          "duration": 12,
+          "entry": "e",
+          "delay": 3
+        }
+      ]
+    },
+    {
+      "groups": [
+        {
+          "goblin": "boss",
+          "count": 1,
+          "duration": 0,
+          "entry": "n",
+          "delay": 5
+        },
+        {
+          "goblin": "boss",
+          "count": 1,
+          "duration": 0,
+          "entry": "w",
+          "delay": 14
+        },
+        {
+          "goblin": "grunt",
+          "count": 156,
+          "duration": 20,
+          "entry": "n",
+          "delay": 0
+        },
+        {
+          "goblin": "grunt",
+          "count": 156,
+          "duration": 20,
+          "entry": "w",
+          "delay": 0
+        },
+        {
+          "goblin": "grunt",
+          "count": 156,
+          "duration": 20,
+          "entry": "e",
+          "delay": 0
+        },
+        {
+          "goblin": "runner",
+          "count": 36,
+          "duration": 14,
+          "entry": "n",
+          "delay": 3
+        },
+        {
+          "goblin": "runner",
+          "count": 36,
+          "duration": 14,
+          "entry": "w",
+          "delay": 3
+        },
+        {
+          "goblin": "runner",
+          "count": 36,
+          "duration": 14,
+          "entry": "e",
+          "delay": 3
+        },
+        {
+          "goblin": "glider",
+          "count": 19,
+          "duration": 14,
+          "entry": "n",
+          "delay": 4
+        },
+        {
+          "goblin": "glider",
+          "count": 19,
+          "duration": 14,
+          "entry": "w",
+          "delay": 4
+        },
+        {
+          "goblin": "glider",
+          "count": 19,
+          "duration": 14,
+          "entry": "e",
+          "delay": 4
+        },
+        {
+          "goblin": "brute",
+          "count": 4,
+          "duration": 14,
+          "entry": "n",
+          "delay": 4
+        },
+        {
+          "goblin": "brute",
+          "count": 4,
+          "duration": 14,
+          "entry": "w",
+          "delay": 4
+        },
+        {
+          "goblin": "brute",
+          "count": 4,
+          "duration": 14,
+          "entry": "e",
+          "delay": 4
+        },
+        {
+          "goblin": "shaman",
+          "count": 3,
+          "duration": 12,
+          "entry": "n",
+          "delay": 4
+        },
+        {
+          "goblin": "shaman",
+          "count": 3,
+          "duration": 12,
+          "entry": "w",
+          "delay": 4
+        },
+        {
+          "goblin": "shaman",
+          "count": 3,
+          "duration": 12,
+          "entry": "e",
+          "delay": 4
+        }
+      ]
+    }
+  ]
+}
