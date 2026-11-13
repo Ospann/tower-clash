@@ -1,6 +1,14 @@
 import type Phaser from 'phaser';
 import type { GameI18n } from '../../i18n';
-import { Frame, hexToInt, palette, turretFrame, uiImage } from '../art';
+import {
+  Frame,
+  hexToInt,
+  palette,
+  PORTRAIT_KEY,
+  portraitFrame,
+  turretFrame,
+  uiImage,
+} from '../art';
 import type { TurretKind } from '../balance';
 import type { Insets } from '../render/camera-math';
 import { ABILITY_KINDS, type AbilityKind } from '../sim/loadout';
@@ -59,6 +67,7 @@ export interface HudView {
   maxHp: number;
   turrets: number;
   turretLimit: number;
+  goblins: number;
   status: string;
   battle: boolean;
   defeat: boolean;
@@ -95,6 +104,7 @@ export class Hud {
   private readonly hpHeight: number;
   private readonly turretText: Phaser.GameObjects.Text;
   private readonly statusText: Phaser.GameObjects.Text;
+  private readonly goblinText: Phaser.GameObjects.Text;
   private readonly fightButton: Button;
   private readonly paletteButtons = new Map<TurretKind, Button>();
   private readonly paletteBaseY = new Map<TurretKind, number>();
@@ -102,7 +112,6 @@ export class Hud {
   private readonly hintBack: Phaser.GameObjects.Rectangle;
   private readonly hintText: Phaser.GameObjects.Text;
   private readonly info: InfoCard | null;
-  private readonly noAbilities: Phaser.GameObjects.Text;
   private readonly minimap: Minimap;
   private readonly defeatLayer: Phaser.GameObjects.Container;
   private hovered: TurretKind | null = null;
@@ -138,9 +147,10 @@ export class Hud {
         .rectangle(hpX + 33, topY - 16, this.hpWidth - 6, this.hpHeight - 6, hexToInt(palette.ok))
         .setOrigin(0);
       this.hpText = addLabel(scene, hpX + 30 + this.hpWidth / 2, topY, '', 26);
-      this.statusText = addLabel(scene, width / 2 + 160, topY, '', 36);
-      uiImage(scene, width / 2 + 380, topY, Frame.TurretBase, 0.75);
-      this.turretText = addLabel(scene, width / 2 + 410, topY, '', 32).setOrigin(0, 0.5);
+      this.goblinText = this.goblinCounter(width * 0.5, topY, 52, 36);
+      this.statusText = addLabel(scene, width * 0.63, topY, '', 34);
+      uiImage(scene, width * 0.72, topY, Frame.TurretBase, 0.75);
+      this.turretText = addLabel(scene, width * 0.72 + 30, topY, '', 32).setOrigin(0, 0.5);
       const pause = new Button(scene, width - 130, topY, '', handlers.onPause, {
         width: 220,
         height: 72,
@@ -161,7 +171,8 @@ export class Hud {
       this.hpText = addLabel(scene, 62 + this.hpWidth / 2, topY, '', 24);
       uiImage(scene, 274, topY, Frame.TurretBase, 0.62);
       this.turretText = addLabel(scene, 300, topY, '', 28).setOrigin(0, 0.5);
-      this.statusText = addLabel(scene, 500, topY, '', 28);
+      this.goblinText = this.goblinCounter(392, topY, 44, 28);
+      this.statusText = addLabel(scene, 572, topY, '', 22);
       const pause = new Button(scene, width - 50, topY, '', handlers.onPause, {
         width: 72,
         height: 68,
@@ -276,17 +287,6 @@ export class Hud {
       }
       this.battleGroup.add(item.button);
     });
-    this.noAbilities = addLabel(
-      scene,
-      panelWidth / 2,
-      cy,
-      i18n.t('hud.noAbilities'),
-      26,
-      palette.uiMuted,
-    )
-      .setWordWrapWidth(panelWidth - 40)
-      .setVisible(false);
-    this.battleGroup.add(this.noAbilities);
 
     this.info = this.landscape
       ? this.buildInfo(width - 220, height - bars.bottom - 170, 400)
@@ -341,11 +341,15 @@ export class Hud {
     const turrets = `${view.turrets}/${view.turretLimit}`;
     if (this.turretText.text !== turrets) this.turretText.setText(turrets);
     if (this.statusText.text !== view.status) this.statusText.setText(view.status);
+    const goblins = String(Math.max(0, view.goblins));
+    if (this.goblinText.text !== goblins) this.goblinText.setText(goblins);
     this.minimap.update(delta, view.camera);
     this.defeatLayer.setVisible(view.defeat);
 
     this.prepGroup.setVisible(!view.battle);
-    this.battleGroup.setVisible(view.battle);
+    this.battleGroup.setVisible(
+      view.battle && ABILITY_KINDS.some((kind) => view.abilities[kind].unlocked),
+    );
     if (!view.battle) {
       for (const [kind, button] of this.paletteButtons) {
         const armed = view.armedKind === kind;
@@ -359,7 +363,6 @@ export class Hud {
       return;
     }
     this.showInfo(null);
-    this.noAbilities.setVisible(!ABILITY_KINDS.some((kind) => view.abilities[kind].unlocked));
     for (const [kind, item] of this.abilityButtons) {
       const state = view.abilities[kind];
       item.button.setVisible(state.unlocked);
@@ -376,6 +379,12 @@ export class Hud {
       if (item.timer.text !== text) item.timer.setText(text);
       item.label.setY(text === '' ? 0 : -18);
     }
+  }
+
+  private goblinCounter(x: number, y: number, size: number, font: number): Phaser.GameObjects.Text {
+    const icon = this.scene.add.image(x, y, PORTRAIT_KEY, portraitFrame('grunt', 0));
+    icon.setScale(size / Math.max(icon.width, icon.height));
+    return addLabel(this.scene, x + size * 0.55, y, '', font).setOrigin(0, 0.5);
   }
 
   private bindPalette(button: Button, kind: TurretKind, baseY: number): void {

@@ -155,6 +155,10 @@ export class World {
     return this.runner.remaining;
   }
 
+  get goblinsLeft(): number {
+    return this.runner.upcoming + this.horde.count;
+  }
+
   spawnGoblin(kind: GoblinKind, x: number, y: number): number {
     const stats = goblins[kind];
     const jitter = 1 + (this.rng() * 2 - 1) * goblinTraits.speedJitter;

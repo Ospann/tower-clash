@@ -887,15 +887,10 @@ export class GameScene extends Phaser.Scene {
     if (!hud) return;
     const { i18n } = services();
     const battle = world.phase !== 'prep';
-    let status = i18n.t('hud.prep');
-    if (battle) {
-      status =
-        this.level.win.type === 'timer'
-          ? i18n.t('hud.timer', { seconds: Math.ceil(world.timeLeft / gameSpeed) })
-          : i18n.t('hud.wave', {
-              current: Math.max(1, world.runner.index + 1),
-              total: this.level.waves.length,
-            });
+    const timed = this.level.win.type === 'timer';
+    let status = battle ? '' : i18n.t('hud.prep');
+    if (battle && timed) {
+      status = i18n.t('hud.timer', { seconds: Math.ceil(world.timeLeft / gameSpeed) });
     }
     const selected = world.turretById(this.selected);
     hud.update(
@@ -904,6 +899,7 @@ export class GameScene extends Phaser.Scene {
         maxHp: world.baseMaxHp,
         turrets: world.turrets.length,
         turretLimit: world.turretLimit,
+        goblins: timed ? world.horde.count : world.goblinsLeft,
         status,
         battle,
         defeat: this.defeated,

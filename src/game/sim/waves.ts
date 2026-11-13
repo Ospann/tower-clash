@@ -30,6 +30,16 @@ export class WaveRunner {
     return !this.timed && this.index >= this.level.waves.length - 1 && this.waveFinished;
   }
 
+  get upcoming(): number {
+    if (this.timed) return 0;
+    let total = this.remaining;
+    const from = this.index < 0 ? 0 : this.index + 1;
+    for (const wave of this.level.waves.slice(from)) {
+      for (const group of wave.groups) total += group.count;
+    }
+    return total;
+  }
+
   get remaining(): number {
     let total = 0;
     for (const state of this.groups) total += state.total - state.spawned;

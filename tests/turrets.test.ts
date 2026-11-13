@@ -356,3 +356,25 @@ describe('player rocket', () => {
     expect(world.rocketCooldown).toBeCloseTo(rocket.cooldown / 2);
   });
 });
+
+describe('goblins left counter', () => {
+  it('counts every goblin of every wave and goes down as they die or leak', () => {
+    const twoWaves = level([], {
+      waves: [
+        { groups: [{ goblin: 'grunt', count: 3, duration: 1, entry: 'a', delay: 0 }] },
+        { groups: [{ goblin: 'runner', count: 4, duration: 1, entry: 'a', delay: 0 }] },
+      ],
+    });
+    const world = new World({ level: twoWaves, seed: 2 });
+    expect(world.goblinsLeft).toBe(7);
+    world.startBattle();
+    run(world, 0.5);
+    expect(world.goblinsLeft).toBe(7);
+    for (let i = 0; i < world.horde.count; i += 1) world.horde.hp[i] = 0;
+    const alive = world.horde.count;
+    world.step(1 / 60);
+    expect(world.goblinsLeft).toBe(7 - alive);
+    run(world, 60);
+    expect(world.goblinsLeft).toBe(0);
+  });
+});
