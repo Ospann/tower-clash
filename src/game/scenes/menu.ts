@@ -5,6 +5,7 @@ import { GOBLIN_KINDS } from '../balance';
 import { SceneKey } from '../keys';
 import { services } from '../services';
 import { Button } from '../ui/button';
+import { restartOnResize } from '../ui/screen';
 import { addLabel } from '../ui/text';
 
 export class MenuScene extends Phaser.Scene {
@@ -18,6 +19,7 @@ export class MenuScene extends Phaser.Scene {
     const cx = width / 2;
     gameplay.stop();
     this.cameras.main.fadeIn(200);
+    restartOnResize(this);
 
     const title = addLabel(this, cx, height * 0.17, i18n.t('menu.title'), 68, palette.gold);
     title.setStroke(palette.outline, 10).setFontStyle('bold');
@@ -37,23 +39,33 @@ export class MenuScene extends Phaser.Scene {
       });
     });
 
-    const play = new Button(this, cx, height * 0.46, '', () => {
+    const play = new Button(this, cx, height * 0.44, '', () => {
       this.scene.start(SceneKey.LevelSelect);
     });
     const tree = new Button(
       this,
       cx,
-      height * 0.57,
+      height * 0.54,
       '',
       () => {
         this.scene.start(SceneKey.Tree);
       },
       { color: 0x7d4bc4, fontSize: 38 },
     );
+    const bestiary = new Button(
+      this,
+      cx,
+      height * 0.64,
+      '',
+      () => {
+        this.scene.start(SceneKey.Bestiary);
+      },
+      { color: 0x2e8a6e, fontSize: 36 },
+    );
     const sound = new Button(
       this,
       cx,
-      height * 0.7,
+      height * 0.76,
       '',
       () => {
         const enabled = !save.data.soundEnabled;
@@ -66,7 +78,7 @@ export class MenuScene extends Phaser.Scene {
     const language = new Button(
       this,
       cx,
-      height * 0.81,
+      height * 0.86,
       '',
       () => {
         const list = i18n.languages;
@@ -82,6 +94,7 @@ export class MenuScene extends Phaser.Scene {
       title.setText(i18n.t('menu.title'));
       play.setText(i18n.t('menu.play'));
       tree.setText(i18n.t('menu.tree'));
+      bestiary.setText(i18n.t('menu.bestiary'));
       sound.setText(i18n.t(save.data.soundEnabled ? 'menu.sound.on' : 'menu.sound.off'));
       language.setText(i18n.t('menu.language', { language: i18n.t(`language.${i18n.language}`) }));
     };

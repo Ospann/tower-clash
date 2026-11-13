@@ -2,6 +2,8 @@ import Phaser from 'phaser';
 import { GameEvent, SceneKey } from '../keys';
 import { services } from '../services';
 import { Button } from '../ui/button';
+import { onHotkey } from '../ui/hotkeys';
+import { restartOnResize } from '../ui/screen';
 import { addLabel } from '../ui/text';
 
 let resumeGameplay = false;
@@ -30,6 +32,10 @@ export class PauseScene extends Phaser.Scene {
       },
       { color: 0x3a3f58, fontSize: 38 },
     );
+    onHotkey(this, (event) => {
+      if (event.code === 'Escape') resumeGame(this.game);
+    });
+    restartOnResize(this);
   }
 }
 
@@ -39,6 +45,7 @@ export function pauseGame(game: Phaser.Game): void {
   const { gameplay, mute } = services();
   resumeGameplay = gameplay.isActive;
   scene.pause(SceneKey.Game);
+  if (scene.isActive(SceneKey.Hud)) scene.pause(SceneKey.Hud);
   gameplay.stop();
   mute.set('pause', true);
   scene.run(SceneKey.Pause);
@@ -49,6 +56,7 @@ export function resumeGame(game: Phaser.Game): void {
   const { gameplay, mute } = services();
   game.scene.stop(SceneKey.Pause);
   game.scene.resume(SceneKey.Game);
+  if (game.scene.isPaused(SceneKey.Hud)) game.scene.resume(SceneKey.Hud);
   mute.set('pause', false);
   if (resumeGameplay) gameplay.start();
 }

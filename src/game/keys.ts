@@ -4,6 +4,8 @@ export const SceneKey = {
   Menu: 'Menu',
   LevelSelect: 'LevelSelect',
   Tree: 'Tree',
+  Bestiary: 'Bestiary',
+  Hud: 'Hud',
   Game: 'Game',
   Pause: 'Pause',
   Result: 'Result',

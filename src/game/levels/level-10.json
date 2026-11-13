@@ -10,65 +10,205 @@
   "tiles": "ash",
   "obstacles": [
     {
-      "type": "ruins",
+      "type": "cliff",
       "shape": {
         "kind": "rect",
-        "x": 150,
-        "y": 420,
-        "w": 100,
+        "x": 0,
+        "y": 0,
+        "w": 280,
+        "h": 240
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 440,
+        "y": 0,
+        "w": 280,
+        "h": 240
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 0,
+        "y": 240,
+        "w": 160,
+        "h": 120
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 560,
+        "y": 240,
+        "w": 160,
+        "h": 280
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 240,
+        "y": 320,
+        "w": 80,
         "h": 80
       }
     },
     {
-      "type": "ruins",
+      "type": "cliff",
       "shape": {
         "kind": "rect",
-        "x": 470,
-        "y": 420,
-        "w": 100,
+        "x": 400,
+        "y": 320,
+        "w": 80,
         "h": 80
       }
     },
     {
-      "type": "ruins",
+      "type": "cliff",
       "shape": {
         "kind": "rect",
-        "x": 310,
+        "x": 0,
+        "y": 480,
+        "w": 160,
+        "h": 800
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 240,
+        "y": 480,
+        "w": 80,
+        "h": 80
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 400,
+        "y": 480,
+        "w": 80,
+        "h": 80
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 240,
         "y": 640,
-        "w": 100,
+        "w": 80,
         "h": 80
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 400,
+        "y": 640,
+        "w": 80,
+        "h": 80
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 560,
+        "y": 640,
+        "w": 160,
+        "h": 640
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 160,
+        "y": 800,
+        "w": 80,
+        "h": 480
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 480,
+        "y": 800,
+        "w": 80,
+        "h": 480
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 240,
+        "y": 840,
+        "w": 40,
+        "h": 200
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 440,
+        "y": 840,
+        "w": 40,
+        "h": 200
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 240,
+        "y": 1120,
+        "w": 240,
+        "h": 160
       }
     }
   ],
   "entries": [
     {
-      "id": "n",
-      "x": 360,
+      "id": "a",
+      "x": 360.0,
       "y": 0,
-      "radius": 150
+      "radius": 70.0
     },
     {
-      "id": "w",
+      "id": "b",
       "x": 0,
-      "y": 500,
-      "radius": 80
+      "y": 420.0,
+      "radius": 50.0
     },
     {
-      "id": "e",
+      "id": "c",
       "x": 720,
-      "y": 500,
-      "radius": 80
+      "y": 580.0,
+      "radius": 50.0
     }
   ],
   "zones": [
     {
-      "x": 0,
+      "x": 240,
       "y": 1040,
-      "w": 720,
-      "h": 90
+      "w": 240,
+      "h": 80
     }
   ],
-  "baseHp": 100,
+  "baseHp": 65,
   "turretLimit": 7,
   "win": {
     "type": "timer",
@@ -83,44 +223,44 @@
       "groups": [
         {
           "goblin": "grunt",
-          "count": 60,
+          "count": 120,
           "duration": 12,
-          "entry": "n",
+          "entry": "a",
           "delay": 0
         },
         {
           "goblin": "grunt",
-          "count": 60,
+          "count": 120,
           "duration": 12,
-          "entry": "w",
+          "entry": "b",
           "delay": 0
         },
         {
           "goblin": "grunt",
-          "count": 60,
+          "count": 120,
           "duration": 12,
-          "entry": "e",
+          "entry": "c",
           "delay": 0
         },
         {
           "goblin": "runner",
-          "count": 15,
+          "count": 30,
           "duration": 12,
-          "entry": "n",
+          "entry": "a",
           "delay": 0
         },
         {
           "goblin": "runner",
-          "count": 15,
+          "count": 30,
           "duration": 12,
-          "entry": "w",
+          "entry": "b",
           "delay": 0
         },
         {
           "goblin": "runner",
-          "count": 15,
+          "count": 30,
           "duration": 12,
-          "entry": "e",
+          "entry": "c",
           "delay": 0
         }
       ]
@@ -129,65 +269,65 @@
       "groups": [
         {
           "goblin": "grunt",
-          "count": 80,
+          "count": 160,
           "duration": 12,
-          "entry": "n",
+          "entry": "a",
           "delay": 0
         },
         {
           "goblin": "grunt",
-          "count": 80,
+          "count": 160,
           "duration": 12,
-          "entry": "w",
+          "entry": "b",
           "delay": 0
         },
         {
           "goblin": "grunt",
-          "count": 80,
+          "count": 160,
           "duration": 12,
-          "entry": "e",
+          "entry": "c",
           "delay": 0
         },
         {
           "goblin": "shield",
-          "count": 10,
+          "count": 20,
           "duration": 12,
-          "entry": "n",
+          "entry": "a",
           "delay": 0
         },
         {
           "goblin": "shield",
-          "count": 10,
+          "count": 20,
           "duration": 12,
-          "entry": "w",
+          "entry": "b",
           "delay": 0
         },
         {
           "goblin": "shield",
-          "count": 10,
+          "count": 20,
           "duration": 12,
-          "entry": "e",
+          "entry": "c",
           "delay": 0
         },
         {
           "goblin": "glider",
-          "count": 5,
+          "count": 10,
           "duration": 10,
-          "entry": "n",
+          "entry": "a",
           "delay": 3
         },
         {
           "goblin": "glider",
-          "count": 5,
+          "count": 10,
           "duration": 10,
-          "entry": "w",
+          "entry": "b",
           "delay": 3
         },
         {
           "goblin": "glider",
-          "count": 5,
+          "count": 10,
           "duration": 10,
-          "entry": "e",
+          "entry": "c",
           "delay": 3
         }
       ]
@@ -196,65 +336,65 @@
       "groups": [
         {
           "goblin": "grunt",
-          "count": 100,
+          "count": 200,
           "duration": 12,
-          "entry": "n",
+          "entry": "a",
           "delay": 0
         },
         {
           "goblin": "grunt",
-          "count": 100,
+          "count": 200,
           "duration": 12,
-          "entry": "w",
+          "entry": "b",
           "delay": 0
         },
         {
           "goblin": "grunt",
-          "count": 100,
+          "count": 200,
           "duration": 12,
-          "entry": "e",
+          "entry": "c",
           "delay": 0
         },
         {
           "goblin": "brute",
-          "count": 2,
+          "count": 4,
           "duration": 10,
-          "entry": "n",
+          "entry": "a",
           "delay": 2
         },
         {
           "goblin": "brute",
-          "count": 2,
+          "count": 4,
           "duration": 10,
-          "entry": "w",
+          "entry": "b",
           "delay": 2
         },
         {
           "goblin": "brute",
-          "count": 2,
+          "count": 4,
           "duration": 10,
-          "entry": "e",
+          "entry": "c",
           "delay": 2
         },
         {
           "goblin": "shaman",
-          "count": 2,
+          "count": 5,
           "duration": 10,
-          "entry": "n",
+          "entry": "a",
           "delay": 3
         },
         {
           "goblin": "shaman",
-          "count": 2,
+          "count": 5,
           "duration": 10,
-          "entry": "w",
+          "entry": "b",
           "delay": 3
         },
         {
           "goblin": "shaman",
-          "count": 2,
+          "count": 5,
           "duration": 10,
-          "entry": "e",
+          "entry": "c",
           "delay": 3
         }
       ]

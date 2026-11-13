@@ -1,9 +1,18 @@
 import type { LevelData, Obstacle, Point, Rect } from '../levels/level-types';
 
 export const sightBlockers: Readonly<Record<Obstacle['type'], boolean>> = {
+  cliff: false,
   rock: true,
   forest: true,
   ruins: true,
+  water: false,
+};
+
+export const buildableTerrain: Readonly<Record<Obstacle['type'], boolean>> = {
+  cliff: true,
+  rock: false,
+  forest: false,
+  ruins: false,
   water: false,
 };
 
@@ -24,6 +33,11 @@ export function obstacleContains(obstacle: Obstacle, x: number, y: number): bool
   if (shape.kind === 'rect') {
     return x >= shape.x && x < shape.x + shape.w && y >= shape.y && y < shape.y + shape.h;
   }
+  if (shape.kind === 'circle') {
+    const dx = x - shape.x;
+    const dy = y - shape.y;
+    return dx * dx + dy * dy < shape.r * shape.r;
+  }
   return inPolygon(shape.points, x, y);
 }
 
@@ -40,6 +54,7 @@ export class GridMap {
   readonly blockMove: Uint8Array;
   readonly blockSight: Uint8Array;
   readonly zone: Uint8Array;
+  readonly buildable: Uint8Array;
   private readonly inv: number;
 
   constructor(level: Pick<LevelData, 'grid' | 'obstacles' | 'zones'>) {
@@ -53,6 +68,7 @@ export class GridMap {
     this.blockMove = new Uint8Array(size);
     this.blockSight = new Uint8Array(size);
     this.zone = new Uint8Array(size);
+    this.buildable = new Uint8Array(size).fill(1);
     for (let cy = 0; cy < this.rows; cy += 1) {
       for (let cx = 0; cx < this.cols; cx += 1) {
         const x = (cx + 0.5) * this.cell;
@@ -65,10 +81,12 @@ export class GridMap {
           if (!obstacleContains(obstacle, x, y)) continue;
           this.blockMove[c] = 1;
           if (sightBlockers[obstacle.type]) this.blockSight[c] = 1;
+          if (!buildableTerrain[obstacle.type]) this.buildable[c] = 0;
         }
         if (this.zone[c]) {
           this.blockMove[c] = 0;
           this.blockSight[c] = 0;
+          this.buildable[c] = 0;
         }
       }
     }
@@ -121,6 +139,28 @@ export class GridMap {
       if (!this.inside(x, y) || this.blockSight[this.cellAt(x, y)] === 1) return d;
     }
     return reach;
+  }
+
+  canBuild(x: number, y: number): boolean {
+    return this.inside(x, y) && this.buildable[this.cellAt(x, y)] === 1;
+  }
+
+  circleBuildable(x: number, y: number, radius: number): boolean {
+    for (let a = 0; a < 8; a += 1) {
+      const angle = (a / 8) * Math.PI * 2;
+      if (!this.canBuild(x + Math.cos(angle) * radius, y + Math.sin(angle) * radius)) return false;
+    }
+    return this.canBuild(x, y);
+  }
+
+  buildableCount(top = 0, bottom = this.height): number {
+    let total = 0;
+    for (let cy = 0; cy < this.rows; cy += 1) {
+      const y = (cy + 0.5) * this.cell;
+      if (y < top || y > bottom) continue;
+      for (let cx = 0; cx < this.cols; cx += 1) total += this.buildable[cy * this.cols + cx]!;
+    }
+    return total;
   }
 
   circleFree(x: number, y: number, radius: number): boolean {

@@ -11,6 +11,7 @@ import { createGame } from './game/create-game';
 import { saveSchema } from './game/save';
 import { pauseGame } from './game/scenes/pause';
 import { provideServices } from './game/services';
+import { watchScreen } from './game/ui/screen';
 import { createI18n } from './i18n';
 import './style.css';
 
@@ -44,6 +45,7 @@ async function bootstrap(): Promise<void> {
   game = createGame(root);
   game.sound.mute = mute.isMuted;
   const activeGame = game;
+  watchScreen(activeGame);
 
   ads.onAdStart(() => mute.set('ad', true));
   ads.onAdEnd(() => mute.set('ad', false));

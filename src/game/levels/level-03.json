@@ -10,30 +10,100 @@
   "tiles": "meadow",
   "obstacles": [
     {
-      "type": "ruins",
+      "type": "cliff",
       "shape": {
         "kind": "rect",
-        "x": 300,
-        "y": 560,
+        "x": 0,
+        "y": 0,
+        "w": 200,
+        "h": 160
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 480,
+        "y": 0,
+        "w": 240,
+        "h": 160
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 0,
+        "y": 160,
+        "w": 80,
+        "h": 1120
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 600,
+        "y": 160,
         "w": 120,
-        "h": 80
+        "h": 1120
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 200,
+        "y": 240,
+        "w": 280,
+        "h": 560
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 80,
+        "y": 880,
+        "w": 120,
+        "h": 400
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 480,
+        "y": 880,
+        "w": 120,
+        "h": 400
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 200,
+        "y": 1120,
+        "w": 280,
+        "h": 160
       }
     }
   ],
   "entries": [
     {
-      "id": "nw",
-      "x": 120,
+      "id": "a",
+      "x": 340.0,
       "y": 0,
-      "radius": 100
+      "radius": 130.0
     }
   ],
   "zones": [
     {
-      "x": 360,
+      "x": 200,
       "y": 1040,
-      "w": 360,
-      "h": 90
+      "w": 280,
+      "h": 80
     }
   ],
   "baseHp": 30,
@@ -50,9 +120,9 @@
       "groups": [
         {
           "goblin": "grunt",
-          "count": 48,
+          "count": 60,
           "duration": 10,
-          "entry": "nw",
+          "entry": "a",
           "delay": 0
         }
       ]
@@ -61,16 +131,16 @@
       "groups": [
         {
           "goblin": "grunt",
-          "count": 72,
+          "count": 90,
           "duration": 12,
-          "entry": "nw",
+          "entry": "a",
           "delay": 0
         },
         {
           "goblin": "shield",
-          "count": 6,
+          "count": 8,
           "duration": 8,
-          "entry": "nw",
+          "entry": "a",
           "delay": 4
         }
       ]
@@ -79,23 +149,23 @@
       "groups": [
         {
           "goblin": "grunt",
-          "count": 104,
+          "count": 130,
           "duration": 14,
-          "entry": "nw",
+          "entry": "a",
           "delay": 0
         },
         {
           "goblin": "shield",
-          "count": 13,
+          "count": 16,
           "duration": 10,
-          "entry": "nw",
+          "entry": "a",
           "delay": 3
         },
         {
           "goblin": "runner",
-          "count": 24,
+          "count": 30,
           "duration": 8,
-          "entry": "nw",
+          "entry": "a",
           "delay": 6
         }
       ]
@@ -104,16 +174,16 @@
       "groups": [
         {
           "goblin": "grunt",
-          "count": 144,
+          "count": 180,
           "duration": 15,
-          "entry": "nw",
+          "entry": "a",
           "delay": 0
         },
         {
           "goblin": "shield",
-          "count": 21,
+          "count": 26,
           "duration": 12,
-          "entry": "nw",
+          "entry": "a",
           "delay": 3
         }
       ]

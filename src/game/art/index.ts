@@ -2,9 +2,9 @@ import type Phaser from 'phaser';
 import type { LevelData } from '../levels/level-types';
 import { mapHeight, mapWidth } from '../levels/level-types';
 import { AtlasBuilder } from './atlas-builder';
-import { ATLAS_KEY } from './frames';
+import { ATLAS_KEY, PORTRAIT_KEY } from './frames';
 import { addFxFrames } from './fx-art';
-import { addGoblinFrames } from './goblin-art';
+import { addGoblinFrames, addGoblinPortraits } from './goblin-art';
 import { drawLevelBackground } from './map-art';
 import { addTurretFrames } from './turret-art';
 
@@ -14,16 +14,30 @@ export { goblinColors, hexToInt, obstacleColors, palette, themeColors } from './
 
 const MAP_KEY = 'level-map';
 
-export function generateArt(textures: Phaser.Textures.TextureManager): void {
-  if (textures.exists(ATLAS_KEY)) return;
-  const atlas = new AtlasBuilder(1024);
-  addGoblinFrames(atlas);
-  addFxFrames(atlas);
-  addTurretFrames(atlas);
-  const texture = textures.addCanvas(ATLAS_KEY, atlas.canvas);
-  if (!texture) throw new Error('Failed to register the generated atlas');
+function register(
+  textures: Phaser.Textures.TextureManager,
+  key: string,
+  atlas: AtlasBuilder,
+): void {
+  const texture = textures.addCanvas(key, atlas.canvas);
+  if (!texture) throw new Error(`Failed to register the generated texture "${key}"`);
   for (const frame of atlas.frames) {
     texture.add(frame.name, 0, frame.x, frame.y, frame.w, frame.h);
+  }
+}
+
+export function generateArt(textures: Phaser.Textures.TextureManager): void {
+  if (!textures.exists(ATLAS_KEY)) {
+    const atlas = new AtlasBuilder(1024);
+    addGoblinFrames(atlas);
+    addFxFrames(atlas);
+    addTurretFrames(atlas);
+    register(textures, ATLAS_KEY, atlas);
+  }
+  if (!textures.exists(PORTRAIT_KEY)) {
+    const portraits = new AtlasBuilder(1024, 512);
+    addGoblinPortraits(portraits);
+    register(textures, PORTRAIT_KEY, portraits);
   }
 }
 

@@ -204,7 +204,7 @@ export class World {
     const r = turretRules.baseRadius;
     if (x < r || x > this.map.width - r) return 'blocked';
     if (y < layout.hudHeight + r || y > layout.bottomBarY - r) return 'blocked';
-    if (!this.map.circleFree(x, y, r)) return 'blocked';
+    if (!this.map.circleBuildable(x, y, r)) return 'blocked';
     for (const zone of this.level.zones) {
       if (
         rectContains({ x: zone.x - r, y: zone.y - r, w: zone.w + r * 2, h: zone.h + r * 2 }, x, y)

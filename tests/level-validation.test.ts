@@ -110,7 +110,7 @@ describe('validateLevel', () => {
       )[0],
     ).toContain('obstacles[0].shape.points: expected at least 3 item(s)');
     expect(
-      broken((l) => (l.obstacles = [{ type: 'lava', shape: { kind: 'circle' } }])),
+      broken((l) => (l.obstacles = [{ type: 'lava', shape: { kind: 'triangle' } }])),
     ).toHaveLength(2);
     expect(broken((l) => (l.win = { type: 'timer' }))[0]).toContain('win.seconds');
     expect(broken((l) => (l.win = { type: 'points' }))).toEqual([

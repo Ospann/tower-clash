@@ -1,7 +1,9 @@
 import { upgradeTree, type TurretKind } from '../../src/game/balance';
+import { layout } from '../../src/game/config';
 import type { LevelData } from '../../src/game/levels/level-types';
 import { unlockedTurrets, type Loadout } from '../../src/game/sim/loadout';
 import { loadoutFrom } from '../../src/game/sim/tree';
+import { inSector } from '../../src/game/sim/turrets';
 import { World } from '../../src/game/sim/world';
 
 export interface BotResult {
@@ -39,21 +41,53 @@ export function loadoutAt(share: number): Loadout {
   return loadoutFrom(treeAt(share));
 }
 
+const STEP = 20;
+
 export function place(world: World): void {
   const kinds = unlockedTurrets(world.loadout);
   const order = PREFERENCE.filter((kind) => kinds.includes(kind));
-  const zone = world.level.zones[0];
-  if (!zone) return;
-  const rows = [150, 280, 410];
-  const columns = Math.min(4, world.turretLimit);
-  let placed = 0;
-  for (let attempt = 0; attempt < 400 && placed < world.turretLimit; attempt += 1) {
-    const row = rows[Math.floor(placed / columns) % rows.length] ?? 150;
-    const column = placed % columns;
-    const x = zone.x + (zone.w * (column + 0.5)) / columns + ((attempt * 37) % 90) - 45;
-    const y = zone.y - row - (attempt % 5) * 26;
+  const { map, flow } = world;
+  const walk: number[] = [];
+  let maxDist = 1;
+  for (let c = 0; c < map.blockMove.length; c += 1) {
+    const dist = flow.dist[c] ?? Number.POSITIVE_INFINITY;
+    if (map.blockMove[c] || map.zone[c] || !Number.isFinite(dist)) continue;
+    walk.push(c);
+    maxDist = Math.max(maxDist, dist);
+  }
+  const covered = new Float32Array(map.blockMove.length);
+  const centerX = (c: number): number => ((c % map.cols) + 0.5) * map.cell;
+  const centerY = (c: number): number => (Math.floor(c / map.cols) + 0.5) * map.cell;
+
+  for (let placed = 0; placed < world.turretLimit; placed += 1) {
     const kind = order[placed % order.length] ?? 'ballista';
-    if (world.addTurret(kind, x, y)) placed += 1;
+    const spec = world.specs[kind];
+    const reach = spec.range * 0.85;
+    let best = { score: 0, x: 0, y: 0, sx: 0, sy: 0 };
+    for (let y = layout.hudHeight + 30; y < layout.bottomBarY - 30; y += STEP) {
+      for (let x = 30; x < map.width - 30; x += STEP) {
+        if (world.placementIssue(kind, x, y) !== 'ok') continue;
+        let score = 0;
+        let sx = 0;
+        let sy = 0;
+        for (const c of walk) {
+          const d = Math.hypot(centerX(c) - x, centerY(c) - y);
+          if (d > reach || d < spec.minRange) continue;
+          const weight = (1 + 2 * (1 - (flow.dist[c] ?? 0) / maxDist)) / (1 + (covered[c] ?? 0));
+          score += weight;
+          sx += centerX(c) * weight;
+          sy += centerY(c) * weight;
+        }
+        if (score > best.score) best = { score, x, y, sx, sy };
+      }
+    }
+    if (best.score <= 0) break;
+    const angle = Math.atan2(best.sy / best.score - best.y, best.sx / best.score - best.x);
+    const turret = world.addTurret(kind, best.x, best.y, angle);
+    if (!turret) break;
+    for (const c of walk) {
+      if (inSector(turret, spec, centerX(c), centerY(c))) covered[c] = (covered[c] ?? 0) + 1;
+    }
   }
 }
 

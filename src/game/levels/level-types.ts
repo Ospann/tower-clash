@@ -3,7 +3,7 @@ import type { GoblinKind } from '../balance';
 export const TILE_THEMES = ['meadow', 'swamp', 'dunes', 'ash'] as const;
 export type TileTheme = (typeof TILE_THEMES)[number];
 
-export const OBSTACLE_TYPES = ['rock', 'forest', 'water', 'ruins'] as const;
+export const OBSTACLE_TYPES = ['cliff', 'rock', 'forest', 'water', 'ruins'] as const;
 export type ObstacleType = (typeof OBSTACLE_TYPES)[number];
 
 export interface Point {
@@ -18,7 +18,10 @@ export interface Rect {
   h: number;
 }
 
-export type ObstacleShape = ({ kind: 'rect' } & Rect) | { kind: 'poly'; points: Point[] };
+export type ObstacleShape =
+  | ({ kind: 'rect' } & Rect)
+  | { kind: 'poly'; points: Point[] }
+  | { kind: 'circle'; x: number; y: number; r: number };
 
 export interface Obstacle {
   type: ObstacleType;

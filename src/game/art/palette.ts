@@ -95,6 +95,7 @@ export const goblinColors: Readonly<Record<GoblinKind, GoblinColors>> = {
 export const obstacleColors: Readonly<
   Record<ObstacleType, { fill: string; dark: string; light: string }>
 > = {
+  cliff: { fill: '#7fa84a', dark: '#4f6b2c', light: '#97c05a' },
   rock: { fill: '#8d948c', dark: '#5d655f', light: '#b9c0b5' },
   forest: { fill: '#2f6b45', dark: '#1e4a30', light: '#4c9160' },
   water: { fill: '#3f8fc4', dark: '#2a6a99', light: '#8fd0f0' },
@@ -106,32 +107,52 @@ export interface ThemeColors {
   landDark: string;
   landLight: string;
   speck: string;
+  plateau: string;
+  plateauLight: string;
+  plateauDark: string;
+  plateauFace: string;
 }
 
 export const themeColors: Readonly<Record<TileTheme, ThemeColors>> = {
   meadow: {
-    land: '#c9b47a',
-    landDark: '#b8a36a',
-    landLight: '#d8c58d',
-    speck: '#a8c070',
+    land: '#b98a52',
+    landDark: '#a87a45',
+    landLight: '#c99c66',
+    speck: '#8e6a3c',
+    plateau: '#7fa84a',
+    plateauLight: '#97c05a',
+    plateauDark: '#6c933c',
+    plateauFace: '#4f6b2c',
   },
   swamp: {
-    land: '#9fa98a',
-    landDark: '#8d9879',
-    landLight: '#b1ba9c',
-    speck: '#6f8f7a',
+    land: '#8f8b62',
+    landDark: '#7f7b55',
+    landLight: '#a09c73',
+    speck: '#6c6a48',
+    plateau: '#5f8f6a',
+    plateauLight: '#76a780',
+    plateauDark: '#517d5b',
+    plateauFace: '#3a5a43',
   },
   dunes: {
-    land: '#e2c88f',
-    landDark: '#d2b77d',
-    landLight: '#eed8a6',
-    speck: '#c9a868',
+    land: '#e0c38a',
+    landDark: '#d0b277',
+    landLight: '#ecd3a0',
+    speck: '#bfa06a',
+    plateau: '#c49a62',
+    plateauLight: '#d6ad74',
+    plateauDark: '#b08754',
+    plateauFace: '#8a6537',
   },
   ash: {
-    land: '#b3aaa0',
-    landDark: '#a0978d',
-    landLight: '#c5bdb3',
-    speck: '#8a8290',
+    land: '#c2b8a8',
+    landDark: '#b2a898',
+    landLight: '#d0c7b9',
+    speck: '#958a7a',
+    plateau: '#5e5470',
+    plateauLight: '#716684',
+    plateauDark: '#50475f',
+    plateauFace: '#372f45',
   },
 };
 

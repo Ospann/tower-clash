@@ -18,10 +18,10 @@ export class AtlasBuilder {
   private cursorY = PADDING;
   private rowHeight = 0;
 
-  constructor(size: number) {
+  constructor(width: number, height: number = width) {
     this.canvas = document.createElement('canvas');
-    this.canvas.width = size;
-    this.canvas.height = size;
+    this.canvas.width = width;
+    this.canvas.height = height;
     const ctx = this.canvas.getContext('2d');
     if (!ctx) throw new Error('2D canvas is not available');
     this.ctx = ctx;

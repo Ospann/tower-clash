@@ -5,6 +5,7 @@ import { SceneKey } from '../keys';
 import { chapters, isUnlocked, levels } from '../levels';
 import { services } from '../services';
 import { Button } from '../ui/button';
+import { isLandscape, restartOnResize } from '../ui/screen';
 import { addLabel } from '../ui/text';
 import type { GameSceneData } from './game';
 
@@ -20,6 +21,8 @@ export class LevelSelectScene extends Phaser.Scene {
     const { width, height } = this.scale;
     gameplay.stop();
     this.cameras.main.fadeIn(200);
+    restartOnResize(this);
+    const columns = isLandscape() ? 4 : 2;
 
     addLabel(this, width / 2, 60, i18n.t('levels.title'), 46).setFontStyle('bold');
     this.add.image(width / 2 - 46, 116, ATLAS_KEY, Frame.Crystal).setScale(0.9);
@@ -35,9 +38,9 @@ export class LevelSelectScene extends Phaser.Scene {
       const items = levels.filter((level) => level.chapter === chapter);
       items.forEach((level, position) => {
         const index = levels.indexOf(level);
-        const column = position % 2;
-        const row = Math.floor(position / 2);
-        const x = width / 2 + (column === 0 ? -1 : 1) * (CARD.width / 2 + 6);
+        const column = position % columns;
+        const row = Math.floor(position / columns);
+        const x = width / 2 + (column - (columns - 1) / 2) * (CARD.width + 12);
         const cy = y + CARD.height / 2 + row * (CARD.height + CARD.gap);
         const unlocked = isUnlocked(index, save.data.stars);
         const stars = save.data.stars[level.id] ?? 0;
@@ -74,7 +77,7 @@ export class LevelSelectScene extends Phaser.Scene {
           card.setEnabled(false);
         }
       });
-      y += Math.ceil(items.length / 2) * (CARD.height + CARD.gap) + 14;
+      y += Math.ceil(items.length / columns) * (CARD.height + CARD.gap) + 14;
     }
 
     Button.create(

@@ -8,25 +8,76 @@
     "cell": 20
   },
   "tiles": "meadow",
-  "obstacles": [],
+  "obstacles": [
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 0,
+        "y": 0,
+        "w": 80,
+        "h": 1280
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 280,
+        "y": 0,
+        "w": 440,
+        "h": 360
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 640,
+        "y": 360,
+        "w": 80,
+        "h": 920
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 80,
+        "y": 560,
+        "w": 360,
+        "h": 720
+      }
+    },
+    {
+      "type": "cliff",
+      "shape": {
+        "kind": "rect",
+        "x": 440,
+        "y": 1120,
+        "w": 200,
+        "h": 160
+      }
+    }
+  ],
   "entries": [
     {
-      "id": "n",
-      "x": 360,
+      "id": "a",
+      "x": 180.0,
       "y": 0,
-      "radius": 90
+      "radius": 90.0
     }
   ],
   "zones": [
     {
-      "x": 0,
+      "x": 440,
       "y": 1040,
-      "w": 720,
-      "h": 90
+      "w": 200,
+      "h": 80
     }
   ],
   "baseHp": 20,
-  "turretLimit": 3,
+  "turretLimit": 4,
   "win": {
     "type": "waves"
   },
@@ -41,7 +92,7 @@
           "goblin": "grunt",
           "count": 7,
           "duration": 8,
-          "entry": "n",
+          "entry": "a",
           "delay": 0
         }
       ]
@@ -52,7 +103,7 @@
           "goblin": "grunt",
           "count": 14,
           "duration": 10,
-          "entry": "n",
+          "entry": "a",
           "delay": 0
         }
       ]
@@ -63,7 +114,7 @@
           "goblin": "grunt",
           "count": 24,
           "duration": 12,
-          "entry": "n",
+          "entry": "a",
           "delay": 0
         }
       ]

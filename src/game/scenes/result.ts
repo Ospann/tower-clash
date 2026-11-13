@@ -4,6 +4,7 @@ import { economy } from '../balance';
 import { SceneKey } from '../keys';
 import { services } from '../services';
 import { Button } from '../ui/button';
+import { restartOnResize } from '../ui/screen';
 import { addLabel } from '../ui/text';
 import type { GameSceneData, ResultData } from './game';
 
@@ -28,6 +29,7 @@ export class ResultScene extends Phaser.Scene {
     const cx = width / 2;
     const result = this.result;
     this.cameras.main.fadeIn(220);
+    restartOnResize(this, result);
 
     const title = addLabel(
       this,

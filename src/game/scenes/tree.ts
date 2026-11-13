@@ -6,6 +6,7 @@ import { SceneKey } from '../keys';
 import { services } from '../services';
 import { nodeAvailable, nodeCost, nodeLevel, purchaseNode, sanitizeTree } from '../sim/tree';
 import { Button } from '../ui/button';
+import { restartOnResize } from '../ui/screen';
 import { addLabel } from '../ui/text';
 
 const RING = 165;
@@ -146,6 +147,7 @@ export class TreeScene extends Phaser.Scene {
     const { width, height } = this.scale;
     gameplay.stop();
     this.cameras.main.fadeIn(200);
+    restartOnResize(this);
     this.selected = 'core';
     this.views = [];
 

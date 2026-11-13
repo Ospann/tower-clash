@@ -3,13 +3,18 @@ import { mapHeight, mapWidth } from '../levels/level-types';
 import { layout } from '../config';
 import { createRng, type Rng } from '../sim/rng';
 import { entryOutward } from '../sim/world';
-import { obstacleColors, palette, themeColors } from './palette';
+import { obstacleColors, palette, themeColors, type ThemeColors } from './palette';
 
 function trace(ctx: CanvasRenderingContext2D, obstacle: Obstacle, grow = 0): void {
   const shape = obstacle.shape;
   ctx.beginPath();
   if (shape.kind === 'rect') {
-    ctx.roundRect(shape.x - grow, shape.y - grow, shape.w + grow * 2, shape.h + grow * 2, 14);
+    const radius = obstacle.type === 'cliff' ? 6 : 14;
+    ctx.roundRect(shape.x - grow, shape.y - grow, shape.w + grow * 2, shape.h + grow * 2, radius);
+    return;
+  }
+  if (shape.kind === 'circle') {
+    ctx.arc(shape.x, shape.y, shape.r + grow, 0, Math.PI * 2);
     return;
   }
   shape.points.forEach((point, index) => {
@@ -22,6 +27,9 @@ function trace(ctx: CanvasRenderingContext2D, obstacle: Obstacle, grow = 0): voi
 function bounds(obstacle: Obstacle): Rect {
   const shape = obstacle.shape;
   if (shape.kind === 'rect') return shape;
+  if (shape.kind === 'circle') {
+    return { x: shape.x - shape.r, y: shape.y - shape.r, w: shape.r * 2, h: shape.r * 2 };
+  }
   const xs = shape.points.map((point) => point.x);
   const ys = shape.points.map((point) => point.y);
   const x = Math.min(...xs);
@@ -121,6 +129,103 @@ function drawObstacle(ctx: CanvasRenderingContext2D, obstacle: Obstacle, rng: Rn
   ctx.stroke();
 }
 
+const FACE = 14;
+const SHADOW = 8;
+const OUTLINE = 3;
+
+function makeCanvas(width: number, height: number): [HTMLCanvasElement, CanvasRenderingContext2D] {
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('2D canvas is not available');
+  return [canvas, ctx];
+}
+
+function tinted(mask: HTMLCanvasElement, color: string): HTMLCanvasElement {
+  const [canvas, ctx] = makeCanvas(mask.width, mask.height);
+  ctx.drawImage(mask, 0, 0);
+  ctx.globalCompositeOperation = 'source-in';
+  ctx.fillStyle = color;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  return canvas;
+}
+
+function drawCliffs(
+  ctx: CanvasRenderingContext2D,
+  cliffs: readonly Obstacle[],
+  colors: ThemeColors,
+  rng: Rng,
+  width: number,
+  height: number,
+): void {
+  if (cliffs.length === 0) return;
+  const [mask, maskCtx] = makeCanvas(width, height);
+  maskCtx.fillStyle = '#ffffff';
+  for (const cliff of cliffs) {
+    trace(maskCtx, cliff);
+    maskCtx.fill();
+  }
+
+  const shadow = tinted(mask, 'rgba(20, 16, 8, 0.28)');
+  ctx.drawImage(shadow, SHADOW, FACE + SHADOW);
+
+  const outline = tinted(mask, palette.outline);
+  for (let dx = -1; dx <= 1; dx += 1) {
+    for (let dy = -1; dy <= 1; dy += 1) {
+      if (dx === 0 && dy === 0) continue;
+      ctx.drawImage(outline, dx * OUTLINE, dy * OUTLINE);
+      ctx.drawImage(outline, dx * OUTLINE, FACE + dy * OUTLINE);
+    }
+  }
+  const face = tinted(mask, colors.plateauFace);
+  for (let offset = 1; offset <= FACE; offset += 1) ctx.drawImage(face, 0, offset);
+
+  const [top, topCtx] = makeCanvas(width, height);
+  topCtx.fillStyle = colors.plateau;
+  topCtx.fillRect(0, 0, width, height);
+  for (let i = 0; i < 90; i += 1) {
+    topCtx.globalAlpha = 0.45;
+    topCtx.fillStyle = rng() > 0.5 ? colors.plateauDark : colors.plateauLight;
+    topCtx.beginPath();
+    topCtx.ellipse(
+      rng() * width,
+      rng() * height,
+      24 + rng() * 40,
+      14 + rng() * 22,
+      rng() * Math.PI,
+      0,
+      Math.PI * 2,
+    );
+    topCtx.fill();
+  }
+  topCtx.globalAlpha = 1;
+  topCtx.strokeStyle = colors.plateauDark;
+  topCtx.lineWidth = 2;
+  for (let i = 0; i < 420; i += 1) {
+    const x = rng() * width;
+    const y = rng() * height;
+    for (const lean of [-0.5, 0, 0.5]) {
+      topCtx.beginPath();
+      topCtx.moveTo(x + lean * 3, y + 3);
+      topCtx.lineTo(x + lean * 7, y - 4);
+      topCtx.stroke();
+    }
+  }
+  topCtx.globalCompositeOperation = 'destination-in';
+  topCtx.drawImage(mask, 0, 0);
+  ctx.drawImage(top, 0, 0);
+
+  const rim = tinted(mask, colors.plateauLight);
+  const [edge, edgeCtx] = makeCanvas(width, height);
+  edgeCtx.drawImage(rim, 0, 0);
+  edgeCtx.globalCompositeOperation = 'destination-out';
+  edgeCtx.drawImage(mask, 0, 3);
+  ctx.globalAlpha = 0.8;
+  ctx.drawImage(edge, 0, 0);
+  ctx.globalAlpha = 1;
+}
+
 function drawZone(ctx: CanvasRenderingContext2D, zone: Rect): void {
   ctx.save();
   ctx.beginPath();
@@ -170,19 +275,31 @@ export function drawLevelBackground(ctx: CanvasRenderingContext2D, level: LevelD
     ctx.fill();
   }
   ctx.globalAlpha = 1;
-  ctx.strokeStyle = colors.speck;
-  ctx.lineWidth = 2;
-  for (let i = 0; i < 160; i += 1) {
-    const x = rng() * width;
-    const y = rng() * height;
-    for (const lean of [-0.5, 0, 0.5]) {
-      ctx.beginPath();
-      ctx.moveTo(x + lean * 4, y + 4);
-      ctx.lineTo(x + lean * 9, y - 5);
-      ctx.stroke();
-    }
+  ctx.fillStyle = colors.speck;
+  for (let i = 0; i < 360; i += 1) {
+    ctx.globalAlpha = 0.35 + rng() * 0.4;
+    ctx.beginPath();
+    ctx.ellipse(
+      rng() * width,
+      rng() * height,
+      1.5 + rng() * 2.5,
+      1 + rng() * 1.6,
+      0,
+      0,
+      Math.PI * 2,
+    );
+    ctx.fill();
   }
+  ctx.globalAlpha = 1;
 
+  drawCliffs(
+    ctx,
+    level.obstacles.filter((obstacle) => obstacle.type === 'cliff'),
+    colors,
+    rng,
+    width,
+    height,
+  );
   for (const zone of level.zones) drawZone(ctx, zone);
 
   for (const entry of level.entries) {
@@ -208,7 +325,9 @@ export function drawLevelBackground(ctx: CanvasRenderingContext2D, level: LevelD
     ctx.globalAlpha = 1;
   }
 
-  const order = { water: 0, ruins: 1, rock: 2, forest: 3 } as const;
-  const sorted = level.obstacles.toSorted((a, b) => order[a.type] - order[b.type]);
+  const order = { cliff: -1, water: 0, ruins: 1, rock: 2, forest: 3 } as const;
+  const sorted = level.obstacles
+    .filter((obstacle) => obstacle.type !== 'cliff')
+    .toSorted((a, b) => order[a.type] - order[b.type]);
   for (const obstacle of sorted) drawObstacle(ctx, obstacle, rng);
 }

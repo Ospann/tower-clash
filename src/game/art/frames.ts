@@ -8,6 +8,14 @@ export function goblinFrame(kind: GoblinKind, step: WalkStep): string {
   return `goblin-${kind}-${step}`;
 }
 
+export const PORTRAIT_KEY = 'portraits';
+
+export const PORTRAIT_BOX = { width: 170, height: 150 } as const;
+
+export function portraitFrame(kind: GoblinKind, step: WalkStep): string {
+  return `portrait-${kind}-${step}`;
+}
+
 export function corpseFrame(kind: GoblinKind): string {
   return `corpse-${kind}`;
 }

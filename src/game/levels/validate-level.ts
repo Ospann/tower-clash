@@ -1,6 +1,8 @@
 import { GOBLIN_KINDS, spawnRules } from '../balance';
 import { FlowField } from '../sim/flow-field';
+import { layout } from '../config';
 import { GridMap } from '../sim/grid-map';
+import { entryOutward } from '../sim/world';
 import { OBSTACLE_TYPES, TILE_THEMES, type LevelData } from './level-types';
 
 export class LevelValidationError extends Error {
@@ -14,6 +16,8 @@ export class LevelValidationError extends Error {
 }
 
 type Issues = string[];
+
+const MIN_BUILDABLE_CELLS = 60;
 type Dict = Record<string, unknown>;
 
 function isRecord(value: unknown): value is Dict {
@@ -112,8 +116,12 @@ function checkObstacles(value: unknown, issues: Issues, w: number, h: number): v
         num(point.x, `${here}.x`, issues, 0, w);
         num(point.y, `${here}.y`, issues, 0, h);
       });
+    } else if (shape.kind === 'circle') {
+      num(shape.x, `${at}.shape.x`, issues, 0, w);
+      num(shape.y, `${at}.shape.y`, issues, 0, h);
+      num(shape.r, `${at}.shape.r`, issues, 4, Math.max(w, h));
     } else {
-      issues.push(`${at}.shape.kind: expected "rect" or "poly"`);
+      issues.push(`${at}.shape.kind: expected "rect", "poly" or "circle"`);
     }
   });
 }
@@ -231,10 +239,18 @@ export function validateLevel(value: unknown): string[] {
   if (issues.length > 0 || !gridOk || !hasLevelShape(value)) return issues;
 
   const level = value;
-  const flow = new FlowField(new GridMap(level));
+  const map = new GridMap(level);
+  const flow = new FlowField(map);
+  const room = map.buildableCount(layout.hudHeight, layout.bottomBarY);
+  if (room < MIN_BUILDABLE_CELLS) {
+    issues.push(
+      `obstacles: only ${room} buildable cells, at least ${MIN_BUILDABLE_CELLS} are needed for turrets`,
+    );
+  }
   level.entries.forEach((entry, e) => {
-    const x = Math.min(Math.max(entry.x, 1), w - 1);
-    const y = Math.min(Math.max(entry.y, 1), h - 1);
+    const out = entryOutward(entry, w, h);
+    const x = Math.min(Math.max(entry.x - out.x * spawnRules.inset, 1), w - 1);
+    const y = Math.min(Math.max(entry.y - out.y * spawnRules.inset, 1), h - 1);
     if (!flow.reachable(x, y)) {
       issues.push(
         `entries[${e}]: entry "${entry.id}" cannot reach a red zone (blocked by obstacles)`,

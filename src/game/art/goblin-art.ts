@@ -1,6 +1,6 @@
 import { GOBLIN_KINDS, type GoblinKind } from '../balance';
 import type { AtlasBuilder } from './atlas-builder';
-import { corpseFrame, goblinFrame, type WalkStep } from './frames';
+import { corpseFrame, goblinFrame, PORTRAIT_BOX, portraitFrame, type WalkStep } from './frames';
 import { goblinColors, palette, type GoblinColors } from './palette';
 
 type Gear = 'none' | 'bandana' | 'shield' | 'club' | 'glider' | 'staff' | 'crown';
@@ -179,22 +179,38 @@ function drawGear(
     outline(ctx, line);
   } else if (look.gear === 'glider') {
     const span = r * 3.6;
-    const wingY = headY - r * 0.9 + (step ? -1.5 : 1.5);
+    const lift = step ? -1.5 : 1.5;
+    const tail = headY - r * 1.75 + lift;
+    const nose = headY - r * 0.8 + lift;
+    const notch = tail + r * 0.32;
+    const handY = bodyTop + bodyH * 0.45;
+    ctx.lineWidth = line * 0.9;
+    ctx.strokeStyle = palette.outline;
+    for (const side of [-1, 1] as const) {
+      ctx.beginPath();
+      ctx.moveTo(cx + side * r * 1.35, tail + (nose - tail) * 0.6);
+      ctx.lineTo(cx + side * r * 0.85, handY);
+      ctx.stroke();
+    }
     ctx.beginPath();
-    ctx.moveTo(cx, headY - r * 1.5);
-    ctx.lineTo(cx + span, wingY + r * 0.5);
-    ctx.lineTo(cx + span * 0.5, wingY + r * 0.2);
-    ctx.lineTo(cx, wingY + r * 0.55);
-    ctx.lineTo(cx - span * 0.5, wingY + r * 0.2);
-    ctx.lineTo(cx - span, wingY + r * 0.5);
+    ctx.moveTo(cx, nose);
+    ctx.lineTo(cx + span, tail);
+    ctx.lineTo(cx + span * 0.5, notch);
+    ctx.lineTo(cx, tail);
+    ctx.lineTo(cx - span * 0.5, notch);
+    ctx.lineTo(cx - span, tail);
     ctx.closePath();
     ctx.fillStyle = colors.accent;
     ctx.fill();
     outline(ctx, line);
     ctx.beginPath();
-    ctx.moveTo(cx, headY - r * 1.5);
-    ctx.lineTo(cx, wingY + r * 0.55);
-    ctx.lineWidth = line;
+    ctx.moveTo(cx, tail);
+    ctx.lineTo(cx, nose);
+    ctx.moveTo(cx + span * 0.5, notch);
+    ctx.lineTo(cx + r * 0.4, nose - r * 0.1);
+    ctx.moveTo(cx - span * 0.5, notch);
+    ctx.lineTo(cx - r * 0.4, nose - r * 0.1);
+    ctx.lineWidth = line * 0.8;
     ctx.strokeStyle = colors.accentDark;
     ctx.stroke();
   } else if (look.gear === 'staff') {
@@ -399,5 +415,20 @@ export function addGoblinFrames(atlas: AtlasBuilder): void {
     const cw = Math.ceil(look.head * 3.4 + 4);
     const ch = Math.ceil(look.head * 1.9 + 4);
     atlas.add(corpseFrame(kind), cw, ch, (ctx) => drawCorpse(ctx, cw, ch, look, colors));
+  }
+}
+
+export function addGoblinPortraits(atlas: AtlasBuilder): void {
+  for (const kind of GOBLIN_KINDS) {
+    const look = looks[kind];
+    const colors = goblinColors[kind];
+    const { w, h } = frameSize(look);
+    const scale = Math.min(4, PORTRAIT_BOX.width / w, PORTRAIT_BOX.height / h);
+    for (const step of [0, 1] as const) {
+      atlas.add(portraitFrame(kind, step), w * scale, h * scale, (ctx) => {
+        ctx.scale(scale, scale);
+        drawGoblin(ctx, w, h, look, colors, step);
+      });
+    }
   }
 }

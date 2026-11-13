@@ -14,7 +14,8 @@ import { validateLevel } from '../levels/validate-level';
 import { FlowField } from '../sim/flow-field';
 import { GridMap, obstacleContains, rectContains } from '../sim/grid-map';
 
-type Tool = 'rect' | 'poly' | 'entry' | 'zone' | 'erase';
+const TOOLS = ['rect', 'circle', 'poly', 'entry', 'zone', 'erase'] as const;
+type Tool = (typeof TOOLS)[number];
 
 const SNAP = 20;
 
@@ -75,7 +76,7 @@ export class EditorScene extends Phaser.Scene {
 
     this.input.on(Phaser.Input.Events.POINTER_DOWN, (pointer: Phaser.Input.Pointer) => {
       const point = { x: snap(pointer.worldX), y: snap(pointer.worldY) };
-      if (this.tool === 'rect' || this.tool === 'zone') {
+      if (this.tool === 'rect' || this.tool === 'zone' || this.tool === 'circle') {
         this.dragStart = point;
       } else if (this.tool === 'poly') {
         this.polygon.push(point);
@@ -88,12 +89,32 @@ export class EditorScene extends Phaser.Scene {
     });
     this.input.on(Phaser.Input.Events.POINTER_MOVE, (pointer: Phaser.Input.Pointer) => {
       if (!this.dragStart || !pointer.isDown) return;
+      if (this.tool === 'circle') {
+        this.drawOverlay(undefined, {
+          ...this.dragStart,
+          r: Math.hypot(pointer.worldX - this.dragStart.x, pointer.worldY - this.dragStart.y),
+        });
+        return;
+      }
       this.drawOverlay(
         toRect(this.dragStart, { x: snap(pointer.worldX), y: snap(pointer.worldY) }),
       );
     });
     this.input.on(Phaser.Input.Events.POINTER_UP, (pointer: Phaser.Input.Pointer) => {
       if (!this.dragStart) return;
+      if (this.tool === 'circle') {
+        const center = this.dragStart;
+        this.dragStart = null;
+        const r = Math.round(Math.hypot(pointer.worldX - center.x, pointer.worldY - center.y));
+        if (r >= 8) {
+          this.draft.obstacles.push({
+            type: this.obstacleType,
+            shape: { kind: 'circle', ...center, r },
+          });
+        }
+        this.refresh();
+        return;
+      }
       const rect = toRect(this.dragStart, { x: snap(pointer.worldX), y: snap(pointer.worldY) });
       this.dragStart = null;
       if (rect.w >= SNAP && rect.h >= SNAP) {
@@ -165,7 +186,7 @@ export class EditorScene extends Phaser.Scene {
     }
   }
 
-  private drawOverlay(preview?: Rect): void {
+  private drawOverlay(preview?: Rect, circle?: { x: number; y: number; r: number }): void {
     const g = this.overlay.clear();
     const draft = this.draft;
     if (this.showFlow && draft.zones.length > 0) {
@@ -205,6 +226,7 @@ export class EditorScene extends Phaser.Scene {
       g.strokePath();
       for (const point of this.polygon) g.fillStyle(0xffffff, 1).fillCircle(point.x, point.y, 5);
     }
+    if (circle) g.lineStyle(3, 0xffffff, 1).strokeCircle(circle.x, circle.y, circle.r);
     if (preview) {
       g.lineStyle(3, 0xffffff, 1).strokeRect(preview.x, preview.y, preview.w, preview.h);
     }
@@ -254,16 +276,9 @@ export class EditorScene extends Phaser.Scene {
       panel.append(row);
     };
 
-    select('Tool', ['rect', 'poly', 'entry', 'zone', 'erase'], (value) => {
-      if (
-        value === 'rect' ||
-        value === 'poly' ||
-        value === 'entry' ||
-        value === 'zone' ||
-        value === 'erase'
-      ) {
-        this.tool = value;
-      }
+    select('Tool', TOOLS, (value) => {
+      const tool = TOOLS.find((item) => item === value);
+      if (tool) this.tool = tool;
       this.polygon = [];
       this.drawOverlay();
     });
@@ -304,7 +319,7 @@ export class EditorScene extends Phaser.Scene {
     const note = document.createElement('div');
     note.style.opacity = '0.7';
     note.textContent =
-      'rect/zone: drag. poly: click points, then Close polygon. entry: click near an edge. Waves, HP and limits are edited in the JSON.';
+      'rect/zone: drag. circle: drag from the centre. poly: click points, then Close polygon. entry: click near an edge. Waves, HP and limits are edited in the JSON.';
     panel.append(note);
     document.body.append(panel);
     this.panel = panel;
