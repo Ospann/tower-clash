@@ -310,246 +310,246 @@
       }
     },
     {
-      "type": "rock",
+      "type": "cliff",
       "shape": {
         "kind": "circle",
         "x": 220,
         "y": 1540,
-        "r": 15
+        "r": 40
       }
     },
     {
-      "type": "rock",
+      "type": "cliff",
       "shape": {
         "kind": "circle",
         "x": 380,
         "y": 1540,
-        "r": 15
+        "r": 40
       }
     },
     {
-      "type": "rock",
+      "type": "cliff",
       "shape": {
         "kind": "circle",
         "x": 540,
         "y": 1540,
-        "r": 15
+        "r": 40
       }
     },
     {
-      "type": "rock",
+      "type": "cliff",
       "shape": {
         "kind": "circle",
         "x": 700,
         "y": 1540,
-        "r": 15
+        "r": 40
       }
     },
     {
-      "type": "rock",
+      "type": "cliff",
       "shape": {
         "kind": "circle",
         "x": 860,
         "y": 1540,
-        "r": 15
+        "r": 40
       }
     },
     {
-      "type": "rock",
+      "type": "cliff",
       "shape": {
         "kind": "circle",
         "x": 1020,
         "y": 1540,
-        "r": 15
+        "r": 40
       }
     },
     {
-      "type": "rock",
+      "type": "cliff",
       "shape": {
         "kind": "circle",
         "x": 1180,
         "y": 1540,
-        "r": 15
+        "r": 40
       }
     },
     {
-      "type": "rock",
+      "type": "cliff",
       "shape": {
         "kind": "circle",
         "x": 1340,
         "y": 1540,
-        "r": 15
+        "r": 40
       }
     },
     {
-      "type": "rock",
+      "type": "cliff",
       "shape": {
         "kind": "circle",
         "x": 1500,
         "y": 1540,
-        "r": 15
+        "r": 40
       }
     },
     {
-      "type": "rock",
+      "type": "cliff",
       "shape": {
         "kind": "circle",
         "x": 300,
         "y": 1700,
-        "r": 15
+        "r": 40
       }
     },
     {
-      "type": "rock",
+      "type": "cliff",
       "shape": {
         "kind": "circle",
         "x": 460,
         "y": 1700,
-        "r": 15
+        "r": 40
       }
     },
     {
-      "type": "rock",
+      "type": "cliff",
       "shape": {
         "kind": "circle",
         "x": 620,
         "y": 1700,
-        "r": 15
+        "r": 40
       }
     },
     {
-      "type": "rock",
+      "type": "cliff",
       "shape": {
         "kind": "circle",
         "x": 780,
         "y": 1700,
-        "r": 15
+        "r": 40
       }
     },
     {
-      "type": "rock",
+      "type": "cliff",
       "shape": {
         "kind": "circle",
         "x": 940,
         "y": 1700,
-        "r": 15
+        "r": 40
       }
     },
     {
-      "type": "rock",
+      "type": "cliff",
       "shape": {
         "kind": "circle",
         "x": 1100,
         "y": 1700,
-        "r": 15
+        "r": 40
       }
     },
     {
-      "type": "rock",
+      "type": "cliff",
       "shape": {
         "kind": "circle",
         "x": 1260,
         "y": 1700,
-        "r": 15
+        "r": 40
       }
     },
     {
-      "type": "rock",
+      "type": "cliff",
       "shape": {
         "kind": "circle",
         "x": 1420,
         "y": 1700,
-        "r": 15
+        "r": 40
       }
     },
     {
-      "type": "rock",
+      "type": "cliff",
       "shape": {
         "kind": "circle",
         "x": 1580,
         "y": 1700,
-        "r": 15
+        "r": 40
       }
     },
     {
-      "type": "rock",
+      "type": "cliff",
       "shape": {
         "kind": "circle",
         "x": 220,
         "y": 1860,
-        "r": 15
+        "r": 40
       }
     },
     {
-      "type": "rock",
+      "type": "cliff",
       "shape": {
         "kind": "circle",
         "x": 380,
         "y": 1860,
-        "r": 15
+        "r": 40
       }
     },
     {
-      "type": "rock",
+      "type": "cliff",
       "shape": {
         "kind": "circle",
         "x": 540,
         "y": 1860,
-        "r": 15
+        "r": 40
       }
     },
     {
-      "type": "rock",
+      "type": "cliff",
       "shape": {
         "kind": "circle",
         "x": 700,
         "y": 1860,
-        "r": 15
+        "r": 40
       }
     },
     {
-      "type": "rock",
+      "type": "cliff",
       "shape": {
         "kind": "circle",
         "x": 860,
         "y": 1860,
-        "r": 15
+        "r": 40
       }
     },
     {
-      "type": "rock",
+      "type": "cliff",
       "shape": {
         "kind": "circle",
         "x": 1020,
         "y": 1860,
-        "r": 15
+        "r": 40
       }
     },
     {
-      "type": "rock",
+      "type": "cliff",
       "shape": {
         "kind": "circle",
         "x": 1180,
         "y": 1860,
-        "r": 15
+        "r": 40
       }
     },
     {
-      "type": "rock",
+      "type": "cliff",
       "shape": {
         "kind": "circle",
         "x": 1340,
         "y": 1860,
-        "r": 15
+        "r": 40
       }
     },
     {
-      "type": "rock",
+      "type": "cliff",
       "shape": {
         "kind": "circle",
         "x": 1500,
         "y": 1860,
-        "r": 15
+        "r": 40
       }
     }
   ],

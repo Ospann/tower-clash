@@ -202,40 +202,66 @@ export class Hud {
 
     this.prepGroup = scene.add.container(panelX, panelY);
     this.prepGroup.add(back());
-    const cell = this.landscape ? 140 : 72;
+    const resetWidth = this.landscape ? 170 : 96;
+    const fightWidth = this.landscape ? 280 : 124;
+    const baseCell = this.landscape ? 140 : 72;
     const cellGap = this.landscape ? 12 : 6;
+    const paletteLeft = this.landscape ? 20 : 8;
+    const paletteRoom =
+      panelWidth - fightWidth - resetWidth - (this.landscape ? 34 : 14) - paletteLeft - cellGap * 2;
+    const count = Math.max(1, setup.kinds.length);
+    const cell = Math.min(baseCell, Math.floor((paletteRoom - cellGap * (count - 1)) / count));
+    const k = cell / baseCell;
     setup.kinds.forEach((kind, index) => {
-      const x = (this.landscape ? 20 : 8) + cell / 2 + index * (cell + cellGap);
+      const x = paletteLeft + cell / 2 + index * (cell + cellGap);
       const button = new Button(scene, x, cy, '', () => undefined, {
         width: cell,
         height: this.landscape ? 140 : 108,
         color: PANEL_LIGHT,
       });
-      const iconScale = this.landscape ? 1.1 : 0.9;
+      const iconScale = (this.landscape ? 1.1 : 0.9) * k;
       const iconY = this.landscape ? -16 : -8;
       button.add([
         uiImage(scene, 0, iconY, Frame.TurretBase, iconScale),
         uiImage(scene, 0, iconY, turretFrame(kind), iconScale).setAngle(-90),
       ]);
       if (this.landscape) {
+        const name = addLabel(
+          scene,
+          0,
+          46,
+          i18n.t(`turret.${kind}`),
+          Math.round(20 * Math.max(0.8, k)),
+        );
+        name.setScale(Math.min(1, (cell - 8) / Math.max(1, name.width)));
         button.add([
-          addLabel(scene, 0, 46, i18n.t(`turret.${kind}`), 20),
-          addLabel(scene, -cell / 2 + 18, -52, String(index + 1), 24, palette.gold).setFontStyle(
-            'bold',
-          ),
+          name,
+          addLabel(
+            scene,
+            -cell / 2 + 16,
+            -52,
+            String(index + 1),
+            Math.round(24 * k),
+            palette.gold,
+          ).setFontStyle('bold'),
         ]);
       }
-      const count = this.landscape
-        ? addLabel(scene, cell / 2 - 26, -52, '', 24, palette.crystal)
+      const counter = this.landscape
+        ? addLabel(
+            scene,
+            cell / 2 - 26 * k,
+            -52,
+            '',
+            Math.round(24 * Math.max(0.8, k)),
+            palette.crystal,
+          )
         : addLabel(scene, 0, 38, '', 22, palette.crystal);
-      count.setStroke(palette.outline, 5).setFontStyle('bold');
-      button.add(count);
-      this.paletteCounts.set(kind, count);
+      counter.setStroke(palette.outline, 5).setFontStyle('bold');
+      button.add(counter);
+      this.paletteCounts.set(kind, counter);
       this.bindPalette(button, kind, cy);
       this.prepGroup.add(button);
     });
-    const resetWidth = this.landscape ? 170 : 96;
-    const fightWidth = this.landscape ? 280 : 124;
     const reset = new Button(
       scene,
       panelWidth - fightWidth - resetWidth / 2 - (this.landscape ? 34 : 14),

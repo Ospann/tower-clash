@@ -626,13 +626,14 @@ export class GameScene extends Phaser.Scene {
 
     const hovering = !pointer.isDown && !pointer.wasTouch;
     if ((hovering || this.dropping) && this.armedKind && world.phase === 'prep') {
+      const spot = this.inMap(x, y) ? world.snapSpot(this.armedKind, x, y, this.snapReach()) : null;
       this.ghost = this.inMap(x, y)
         ? {
             kind: this.armedKind,
-            x,
-            y,
-            angle: world.defaultAngle(x, y),
-            ok: world.placementIssue(this.armedKind, x, y) === 'ok',
+            x: spot?.x ?? x,
+            y: spot?.y ?? y,
+            angle: world.defaultAngle(spot?.x ?? x, spot?.y ?? y),
+            ok: spot !== null,
           }
         : null;
       if (this.dropping) return;
@@ -658,7 +659,8 @@ export class GameScene extends Phaser.Scene {
       if (turret) {
         const tx = x + this.dragX;
         const ty = y + this.dragY;
-        if (world.moveTurret(turret.id, tx, ty)) this.ghost = null;
+        const spot = world.snapSpot(turret.kind, tx, ty, this.snapReach(), turret.id);
+        if (spot && world.moveTurret(turret.id, spot.x, spot.y)) this.ghost = null;
         else this.ghost = { kind: turret.kind, x: tx, y: ty, angle: turret.angle, ok: false };
       }
     } else if (this.gesture === 'rotate') {
@@ -792,8 +794,15 @@ export class GameScene extends Phaser.Scene {
     }
   }
 
-  private place(kind: TurretKind, x: number, y: number): void {
+  private snapReach(): number {
+    return Math.max(24, this.screenPx(28));
+  }
+
+  private place(kind: TurretKind, tapX: number, tapY: number): void {
     const world = this.world;
+    const spot = world.snapSpot(kind, tapX, tapY, this.snapReach());
+    const x = spot?.x ?? tapX;
+    const y = spot?.y ?? tapY;
     const issue = world.placementIssue(kind, x, y);
     if (issue !== 'ok') {
       this.hintKey = issue === 'limit' ? 'prep.limit' : 'prep.blocked';

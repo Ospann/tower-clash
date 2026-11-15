@@ -291,6 +291,31 @@ export class World {
     return best;
   }
 
+  snapSpot(
+    kind: TurretKind,
+    x: number,
+    y: number,
+    reach: number,
+    ignoreId = -1,
+  ): { x: number; y: number } | null {
+    const issue = this.placementIssue(kind, x, y, ignoreId);
+    if (issue === 'ok') return { x, y };
+    if (issue !== 'blocked') return null;
+    const step = 4;
+    for (let r = step; r <= reach; r += step) {
+      const samples = Math.max(8, Math.ceil((Math.PI * 2 * r) / step));
+      let best: { x: number; y: number } | null = null;
+      for (let n = 0; n < samples && !best; n += 1) {
+        const angle = (n / samples) * Math.PI * 2;
+        const sx = x + Math.cos(angle) * r;
+        const sy = y + Math.sin(angle) * r;
+        if (this.placementIssue(kind, sx, sy, ignoreId) === 'ok') best = { x: sx, y: sy };
+      }
+      if (best) return best;
+    }
+    return null;
+  }
+
   moveTurret(id: number, x: number, y: number): boolean {
     const turret = this.turretById(id);
     if (!turret || this.phase !== 'prep') return false;

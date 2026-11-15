@@ -70,6 +70,16 @@ describe('cliffs', () => {
     expect(map.buildableCount()).toBe(0);
   });
 
+  it('snap a near miss onto a small plateau pad', () => {
+    const pad: Obstacle = { type: 'cliff', shape: { kind: 'circle', x: 360, y: 500, r: 40 } };
+    const world = new World({ level: level([pad]), manualSpawns: true });
+    expect(world.placementIssue('ballista', 390, 500)).toBe('blocked');
+    const spot = world.snapSpot('ballista', 390, 500, 40);
+    expect(spot).not.toBeNull();
+    expect(world.placementIssue('ballista', spot?.x ?? 0, spot?.y ?? 0)).toBe('ok');
+    expect(world.snapSpot('ballista', 600, 500, 40)).toBeNull();
+  });
+
   it('route goblins through the corridor between plateaus', () => {
     const world = new World({ level: level([leftCliff, rightCliff]), manualSpawns: true });
     world.phase = 'battle';
